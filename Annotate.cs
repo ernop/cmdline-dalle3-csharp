@@ -1,15 +1,14 @@
-﻿//using System;
-//using System.Collections.Generic;
-//using System.Threading.Tasks;
+﻿using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
-//using static System.Net.Mime.MediaTypeNames;
+using static System.Net.Mime.MediaTypeNames;
 
 //public class Annotator
 //{
 //    public List<string> GetTextInLines(string text, int pixelWidth)
 //    {
 //        //for some reason we need a  "real" graphics object to calculate text widths based off of.
-
 //        var remainingText = text;
 //        var parts = remainingText.Split('\n');
 //        var lines = new List<string>();
