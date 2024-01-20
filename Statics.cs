@@ -45,7 +45,7 @@ namespace Dalle3
             var optionsModel = new OptionsModel();
             //default 
             optionsModel.ImageNumber = 1;
-            optionsModel.Size= ImageSize._1024;
+            optionsModel.Size = ImageSize._1024;
             optionsModel.Quality = "standard";
 
             var numre = new Regex(@"\-([\d]{1,2})");
@@ -61,7 +61,7 @@ namespace Dalle3
                         optionsModel.ImageNumber = count;
                         continue;
                     }
-                 }
+                }
                 if (s == "-hd")
                 {
                     optionsModel.Quality = "hd";
@@ -104,7 +104,30 @@ namespace Dalle3
                 "Fighting Fantasy, Tunnels and Trolls, Monsters Monsters, TTRPG, " +
                 "EZD6, Index Card RPG, Dungeons of Drakkenheim}"
             );
-            var blowups = new List<Blowup>() { awesomes };
+            var gptStyles = new Blowup("{GPTStyles}", "" +
+                "{" +
+                //"The image features a dynamic composition with swirling lines and bright colors typical of the Expressionist movement evoking a sense of emotional turmoil, " +
+                "A serene landscape painting in the Impressionist style, " +
+                "A stark minimalist composition, " +
+                "A vibrant pop art piece, " +
+                "A digital artwork, " +
+                "The charcoal drawing, " +
+                "A Baroque-era oil painting, " +
+                "a cubist collage using geometric shapes, " +
+                "An Art Nouveau illustration, " +
+                "A traditional Japanese woodblock print" +
+                "A whimsical watercolor illustration, " +
+                "A dynamic abstract expressionist canvas, " +
+                "A detailed Renaissance fresco, " +
+                "A Gothic tapestry rich with allegory, " +
+                //"A bold graffiti mural in a street art style, " +
+                "A photorealistic graphite sketch, " +
+                "A Rococo pastel portrait, " +
+                "A contemplative Zen ink wash painting, " +
+                "A post-impressionist scene with vivid brushstrokes, " +
+                "A modernist sculpture " +
+                "}");
+            var blowups = new List<Blowup>() { awesomes, gptStyles };
             foreach (var b in blowups)
             {
                 var key = b.Short;
@@ -135,9 +158,28 @@ namespace Dalle3
 
             if (usePrompt.Length > 100)
             {
-                usePrompt = usePrompt.Substring(0, 100);
+                usePrompt = usePrompt.Substring(0, 130);
             }
-            var outfn = $"{usePrompt.Trim().TrimEnd('_')}-{now.Year}{now.Month:00}{now.Day:00}-{req.Size}-{tries}.png";
+            var align = "";
+            //var w = new ImageSize("1792x1024");
+            var dumbSize = req.Size.ToString();
+            switch (dumbSize)
+            {
+                case "1024x1024":
+                    align = "sq";
+                    break;
+                case "1792x1024":
+                    align = "h";
+                    break;
+                case "1024x1792":
+                    align = "v";
+                    break;
+                default:
+                    align = "def";
+                    break;
+            }
+            Console.WriteLine(dumbSize);
+            var outfn = $"{usePrompt.Trim().TrimEnd('_')}-{now.Year}{now.Month:00}{now.Day:00}-{req.Quality}-{align}-{tries}.png";
             return outfn;
         }
 
@@ -163,7 +205,8 @@ namespace Dalle3
                 var chunk = match.Groups[1].Value;
                 var parts = chunk.Split(',').Select(el => el.Trim());
                 var target = $"{{{chunk}}}";
-                foreach (var part in parts)
+                foreach (
+                    var part in parts)
                 {
                     var part2 = "AAA" + part + "AAA";
                     var replaced = ReplaceOnce(input, target, part2);

@@ -46,7 +46,7 @@ namespace Dalle3
                     //"an incredibly detailed and emotional william sprang style" +
                     "} of {Boy, Woman, Man} in {Science Fiction, Romance} set {Desert, Mountains}.";
                 //inp = "{Watercolor, Illustration, Sprang} of {Boy, Woman, Man} in {Mystery, Romance, Science Fiction} set {Mountains}. -r";
-                inp = "in the style of {AwesomeStyles}, draw a completely new fantasy creature which an adventurer may make friends with, demonstrating its shape, si\r\nze, form,abilities, strengths, weaknesses, powers, dangers, and intelligence.  The creature is unique and is illustrated in digital art with depth of field and layered composition.  They are highly detailed, unusua\r\nl, very distinct, and full of emotions. Thing about a new environmental and ecological role each one might have.  Each has unique features and body forms, arms, colors, textures, and many other unusual, fantasy or\r\nhigh-tech related unique aspects to its appearance. -2";
+                inp = "in the style of {AwesomeStyles}, draw a completely new fantasy creature which an adventurer may make friends with, demonstrating its shape, si\r\nze, form,abilities, strengths, weaknesses, powers, dangers, and intelligence.  The creature is unique and is illustrated in digital art with depth of field and layered composition.  They are highly detailed, unusua\r\nl, very distinct, and full of emotions. Thing about a new environmental and ecological role each one might have.  Each has unique features and body forms, arms, colors, textures, and many other unusual, fantasy or\r\nhigh-tech related unique aspects to its appearance.";
                 args = inp.Split();
             }
 
@@ -110,7 +110,10 @@ namespace Dalle3
         {
             var req = new ImageGenerationRequest();
             req.Model = OpenAI_API.Models.Model.DALLE3;
-            req.Quality = quality;
+            
+            //the library magically returns null when the actual object is "standard" and you are using dalle3 for some reason.
+            //so fix it here for tracking.
+            req.Quality = quality ?? "standard";
             req.Prompt = Substitutions.SubstituteExpansionsIntoPrompt(prompt);
             req.Size = s;
 
