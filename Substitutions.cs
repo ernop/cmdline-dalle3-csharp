@@ -10,27 +10,14 @@ using System.Threading.Tasks;
 
 namespace Dalle3
 {
-    internal static class Substitutions
+    public static class Substitutions
     {
-
-        public class Blowup
-        {
-            public string Short { get; set; }
-            public string Long { get; set; }
-            public Blowup(string s, string l)
-            {
-                Short = s;
-                Long = l;
-            }
-        }
-
         /// <summary>
         /// {A,B,C} {blue,black,golden} {ivory,furry,squares} {3d,2d,calligraphy} on a clear blank white background
         /// Dalle3.exe A {Joyful, Solemn, Hopeful} {Alien, Human, Flower} in {Watercolor, Illustration, Photograph} around {Rainbow, Lightning, Fog}, with a clear white background -r
         /// </summary>
         public static string SubstituteExpansionsIntoPrompt(string prompt)
         {
-
             var expansions = new List<Expando>() {
                 new Expando("A","A single letter \"A\""),
                 new Expando("B","A single letter \"B\""),
@@ -69,6 +56,12 @@ namespace Dalle3
                 new Expando("Sprang","reminiscent of the style of dick sprang"),
                 new Expando("Pointillism","a pointillism painting in amazingly detailed but clear dotted style with small dots and round"),
             };
+            
+            //hmm, this sometimes blows up things even outside of prompts?
+            //overall I have to fix the way this all is done so that:
+            //1 abbreviations work, expansions work.
+            //2 If a prompt is long but has just one "decision point" then we can display and name the file including that.
+            expansions = new List<Expando>();
             foreach (var e in expansions)
             {
                 var key = $"AAA{e.S}AAA";

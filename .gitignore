@@ -3,3 +3,5 @@ apikey.txt
 /bin/Debug
 /obj
 /organization.txt
+/logs/log.txt
+/Log.cs

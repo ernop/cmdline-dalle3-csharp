@@ -11,6 +11,9 @@ using System.CodeDom.Compiler;
 using System.Linq;
 using static Dalle3.Statics;
 using static Dalle3.Substitutions;
+using System.ComponentModel;
+using System.IO;
+using System.Diagnostics.Eventing.Reader;
 
 namespace Dalle3
 {
@@ -46,7 +49,8 @@ namespace Dalle3
                     //"an incredibly detailed and emotional william sprang style" +
                     "} of {Boy, Woman, Man} in {Science Fiction, Romance} set {Desert, Mountains}.";
                 //inp = "{Watercolor, Illustration, Sprang} of {Boy, Woman, Man} in {Mystery, Romance, Science Fiction} set {Mountains}. -r";
-                inp = "in the style of {AwesomeStyles}, draw a completely new fantasy creature which an adventurer may make friends with, demonstrating its shape, si\r\nze, form,abilities, strengths, weaknesses, powers, dangers, and intelligence.  The creature is unique and is illustrated in digital art with depth of field and layered composition.  They are highly detailed, unusua\r\nl, very distinct, and full of emotions. Thing about a new environmental and ecological role each one might have.  Each has unique features and body forms, arms, colors, textures, and many other unusual, fantasy or\r\nhigh-tech related unique aspects to its appearance.";
+
+                inp = "cat in {GPTLocations} {GPTLocations}";
                 args = inp.Split();
             }
 
@@ -66,106 +70,184 @@ namespace Dalle3
                 var modelOptions = Statics.Parse(args);
                 if (modelOptions == null)
                 {
-                    Console.WriteLine("problem with input");
+                    Statics.Logger.Log("problem with input");
                     Usage();
                     return;
                 }
                 var list = new List<Task<bool>>();
+                Statics.Logger.Log($"There are: {modelOptions.EffectivePrompts.Count} prompts, which we will repeat {modelOptions.ImageNumber} times.");
                 for (var ii = 0; ii < modelOptions.ImageNumber; ii++)
                 {
-                    Console.WriteLine($"There are: {modelOptions.EffectivePrompts.Count} prompts");
                     foreach (var subPrompt in modelOptions.EffectivePrompts)
                     {
                         if (badPrompts.IndexOf(subPrompt) != -1)
                         {
-                            Console.WriteLine($"Skipping: {badPrompts} {ii}");
+                            Statics.Logger.Log($"\r\n-----------Skipping due to previous badness: {badPrompts} {ii}");
                             continue;
                         }
                         GenerateOneImageAsync(api, subPrompt, modelOptions.Size, modelOptions.Quality);
                         actuallyGeneratedCount++;
 
-                        if (actuallyGeneratedCount >= 100)
+                        if (actuallyGeneratedCount >= 300)
                         {
-                            Console.WriteLine("break early.");
+                            Statics.Logger.Log("break early due to generating so many. =================.");
                             break;
                         }
                     }
 
                     //we are rate limited at 7/min so we should wait a little bit longer than that.
-                    var amt = 1000 * (60 / 8.0);
-                    Console.WriteLine($"sleeping: {amt / 1000}");
+                    //tier 3 = 7
+                    //tier 4 = 15
+                    //tier 5 = 50
+                    var myRateLimit = 15.0;
+                    var amt = 1000 * (60 / (myRateLimit - 1));
+                    Statics.Logger.Log($"sleeping: {amt / 1000}");
                     System.Threading.Thread.Sleep((int)amt);
                 }
-                Console.WriteLine("Waiting now.");
+                Statics.Logger.Log("Done, waiting for you to hit a button to give time for the last image to dl.");
                 Console.ReadLine();
             }
             else
             {
-
                 Usage();
             }
         }
 
-        static bool GenerateOneImageAsync(OpenAI_API.OpenAIAPI api, string prompt, ImageSize s, string quality)
+        static bool GenerateOneImageAsync(OpenAI_API.OpenAIAPI api, string prompt, ImageSize size, string quality)
         {
             var req = new ImageGenerationRequest();
             req.Model = OpenAI_API.Models.Model.DALLE3;
-            
+
             //the library magically returns null when the actual object is "standard" and you are using dalle3 for some reason.
             //so fix it here for tracking.
             req.Quality = quality ?? "standard";
-            req.Prompt = Substitutions.SubstituteExpansionsIntoPrompt(prompt);
-            req.Size = s;
+            prompt = Substitutions.SubstituteExpansionsIntoPrompt(prompt);
+            req.Prompt = prompt;
+            req.Size = size;
 
-            Console.WriteLine($"Sending to imagemaker: \"{req.Prompt}\"");
+            var l = req.Prompt.Length;
+            var displayedPromptLength = 200;
+            Statics.Logger.Log($"Sending to imagemaker:\t\"{req.Prompt.Substring(0, Math.Min(l, displayedPromptLength))}\"");
             var res = api.ImageGenerations.CreateImageAsync(req);
-
-            //obviously this is terrible.
-            req.Prompt = prompt.Replace("AAA", "");
-            var tries = 0;
-            var outfn = Statics.PromptToFilename(req, tries);
+            var outfn = Statics.PromptToFilename(req);
 
             //this is the final destination; in actuality we will temporarily store them up one folder!
             var fp = $"d:/proj/dalle3/output/{outfn}";
+            var randomSuffix = new Random().Next(1000, 9999);
+            var tempFP = $"{Path.GetTempPath()}{randomSuffix}.png";
+            var tries = 0;
+            var downloadRes = false;
+            while (tries < 5)
+            {
+                tries++;
 
+                using (WebClient client = new WebClient())
+                {
+                    try
+                    {
+                        client.DownloadFileCompleted += (sender, e) => DownloadCompleted(sender, e, tempFP, fp);
+                        client.DownloadFileAsync(new Uri(res.Result.Data[0].Url), tempFP);
+                        if (!string.IsNullOrEmpty(res.Result.Data[0].RevisedPrompt))
+                        {
+                            Statics.Logger.Log($"Revised prompt was: {res.Result.Data[0].RevisedPrompt}");
+                        }
+                        downloadRes = true;
+                        break;
+                        //var ann = new Annotator();
+                        //var annotatedfp = fp.Replace(".png", "_annotated.png");
+                        //ann.Annotate(fp, annotatedfp, prompt);
+                        //IEnumerable<Directory> directories = ImageMetadataReader.ReadMetadata(fp);
+                    }
+                    catch (Exception ex)
+                    {
+                        //split multiple types - input error, vs prompt good but generated image bad, are there more too?
+                        if (ex.InnerException.Message.Contains("Your request was rejected as a result of our safety system. Your prompt may contain text that is not allowed by our safety system."))
+                        {
+                            Statics.Logger.Log($"Prompt rejection.\t\"{req.Prompt}\"");
+                            //Statics.Logger.Log($"{GetMessageLine(ex.InnerException.Message)}");
+                            downloadRes = false;
+                            break;
+                        }
+                        else if (ex.InnerException.Message.Contains("Your request was rejected as a result of our safety system. Image descriptions generated from your prompt may contain text that is not allowed by our safety system. If you believe this was done in error, your request may succeed if retried, or by adjusting your prompt."))
+                        {
+                            Statics.Logger.Log($"Image descriptions from output were bad.\t\"{req.Prompt}\"");
+                            //Statics.Logger.Log($"{GetMessageLine(ex.InnerException.Message)}");
+                            downloadRes = false;
+                            break;
+                        }
+                        else if (ex.InnerException.Message.Contains("This request has been blocked by our content filters."))
+                        {
+                            Statics.Logger.Log($"Content filter block.\t\"{req.Prompt}\"");
+                            //Statics.Logger.Log($"{GetMessageLine(ex.InnerException.Message)}");
+                            downloadRes = false;
+                            break;
+                        }
+                        else if (ex.InnerException.Message.Contains("\"Rate limit exceeded for images per minute in organization"))
+                        {
+                            var sleepTime = 10;
+                            Statics.Logger.Log($"{ex.InnerException.Message}  sleep for: {sleepTime * 1000}");
+                            //after sleeping, then try to download again.
+                            continue;
+                        }
+                        else if (ex.InnerException.Message.Contains("\"Billing hard limit has been reached\""))
+                        { 
+                            Statics.Logger.Log(ex.InnerException.Message);
+                            downloadRes = false;
+                            break;
+                        }
+                        else
+                        {
+                        var aww = 34;
+                        Statics.Logger.Log($"\t.\t\"{req.Prompt}\"");
+                        Statics.Logger.Log($"{GetMessageLine(ex.InnerException.Message)}");
+                        downloadRes = false;
+                        break;
+                    }
+                }
+            }
+        }
+            return downloadRes;
+        }
+
+    private static string GetMessageLine(string inlines)
+    {
+        var p = inlines.Split(new[] { "\n" }, StringSplitOptions.None);
+        foreach (var el in p)
+        {
+            if (el.Contains("\"message\":"))
+            {
+                return el.Trim();
+            }
+        }
+        return "";
+    }
+
+    //Google photo uploader and other programs will incorrectly start messing with files before they're finished.
+    //1. if you save them with another extension which would be ignored, then you get locking issues when trying to move them.
+    //2. so instead i just save them out of view then move them back.
+    private static void DownloadCompleted(object sender, AsyncCompletedEventArgs e, string tempfp, string fp)
+    {
+        try
+        {
+            var uniquefp = fp.Replace(".png", "_1.png");
+            var tries = 0;
             while (true)
             {
-                if (!System.IO.File.Exists(fp))
+                if (!System.IO.File.Exists(uniquefp))
                 {
                     break;
                 }
                 tries++;
-                outfn = Statics.PromptToFilename(req, tries);
-                fp = $"d:/proj/dalle3/output/{outfn}";
+                uniquefp = fp.Replace(".png", $"_{tries}.png");
             }
-
-            using (WebClient client = new WebClient())
-            {
-                try
-                {
-                    //artificial non-jpg file type to avoid google drive and others starting to upload it too soon.
-                    //var fpx = fp.Replace(".png", ".bin");
-                    //client.DownloadFileCompleted += new System.ComponentModel.AsyncCompletedEventHandler(DownloadCompleted);
-                    client.DownloadFileAsync(new Uri(res.Result.Data[0].Url), fp);
-                    Console.WriteLine($"Revised prompt was: {res.Result.Data[0].RevisedPrompt}");
-                    if (!string.IsNullOrEmpty(res.Result.Data[0].RevisedPrompt))
-                    {
-                        var a = 34;
-                    }
-                    //System.IO.File.Move(fpx, fp);
-                    Console.WriteLine($"File downloaded successfully. {fp}");
-                    //var ann = new Annotator();
-                    //var annotatedfp = fp.Replace(".png", "_annotated.png");
-                    //ann.Annotate(fp, annotatedfp, prompt);
-                    //IEnumerable<Directory> directories = ImageMetadataReader.ReadMetadata(fp);
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"b, {ex}");
-                    return false;
-                }
-                return true;
-            }
+            System.IO.File.Move(tempfp, uniquefp);
+            Statics.Logger.Log($"Saved to:\t\t\"{uniquefp}\"");
+        }
+        catch (Exception ex)
+        {
+            var a = 4;
+            Statics.Logger.Log(ex.ToString());
         }
     }
+}
 }

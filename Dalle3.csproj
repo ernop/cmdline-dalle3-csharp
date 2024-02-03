@@ -44,7 +44,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Annotate.cs" />
+    <Compile Include="Blowup.cs" />
     <Compile Include="Expando.cs" />
+    <Compile Include="Log.cs" />
     <Compile Include="OptionsModel.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

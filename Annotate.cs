@@ -111,7 +111,7 @@ using static System.Net.Mime.MediaTypeNames;
 
 //        graphics.Save();
 //        im.Save(dest);
-//        Console.WriteLine($"Successfully saved new fp: {dest}");
+//        Statics.Logger.Log($"Successfully saved new fp: {dest}");
 //        return dest;
 //    }
 
