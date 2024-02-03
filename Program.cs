@@ -50,9 +50,15 @@ namespace Dalle3
                     "} of {Boy, Woman, Man} in {Science Fiction, Romance} set {Desert, Mountains}.";
                 //inp = "{Watercolor, Illustration, Sprang} of {Boy, Woman, Man} in {Mystery, Romance, Science Fiction} set {Mountains}. -r";
 
-                inp = "cat in {GPTLocations} {GPTLocations}";
+                inp = "A splendid cat in {GPTLocations}";
                 args = inp.Split();
             }
+
+            //var a = "d:/proj/dalle3/output/A_splendid_cat_in_The_Ruins_of_an_Ancient_City_among_the_crumbling_walls_lost_relics_and_symbols_and_abandoned_empty_streets_of_a-20240203-standard-sq_3.png";
+            //var p = "A splendid cat in The Ruins of an Ancient City among the crumbling walls lost relics and symbols and abandoned empty streets of a once-great metropolis";
+            //var ann = new Annotator();
+            //var a2 = a.Replace(".png", "_annotated.png");
+            //ann.Annotate(a, a2, p);
 
             var quality = "standard";
             quality = "hd";
@@ -70,7 +76,7 @@ namespace Dalle3
                 var modelOptions = Statics.Parse(args);
                 if (modelOptions == null)
                 {
-                    Statics.Logger.Log("problem with input");
+                    Statics.Logger.Log("problem with input.");
                     Usage();
                     return;
                 }
@@ -109,6 +115,7 @@ namespace Dalle3
             }
             else
             {
+                Console.WriteLine($"You triggered the help display by not submitting any arguments, so printing it and quitting.");
                 Usage();
             }
         }
@@ -145,12 +152,8 @@ namespace Dalle3
                 {
                     try
                     {
-                        client.DownloadFileCompleted += (sender, e) => DownloadCompleted(sender, e, tempFP, fp);
+                        client.DownloadFileCompleted += (sender, e) => DownloadCompleted(sender, e, tempFP, fp, prompt);
                         client.DownloadFileAsync(new Uri(res.Result.Data[0].Url), tempFP);
-                        if (!string.IsNullOrEmpty(res.Result.Data[0].RevisedPrompt))
-                        {
-                            Statics.Logger.Log($"Revised prompt was: {res.Result.Data[0].RevisedPrompt}");
-                        }
                         downloadRes = true;
                         break;
                         //var ann = new Annotator();
@@ -190,64 +193,70 @@ namespace Dalle3
                             continue;
                         }
                         else if (ex.InnerException.Message.Contains("\"Billing hard limit has been reached\""))
-                        { 
+                        {
                             Statics.Logger.Log(ex.InnerException.Message);
                             downloadRes = false;
                             break;
                         }
                         else
                         {
-                        var aww = 34;
-                        Statics.Logger.Log($"\t.\t\"{req.Prompt}\"");
-                        Statics.Logger.Log($"{GetMessageLine(ex.InnerException.Message)}");
-                        downloadRes = false;
-                        break;
+                            Statics.Logger.Log($"\t.\t\"{req.Prompt}\"");
+                            Statics.Logger.Log($"{GetMessageLine(ex.InnerException.Message)}");
+                            downloadRes = false;
+                            break;
+                        }
                     }
                 }
             }
-        }
             return downloadRes;
         }
 
-    private static string GetMessageLine(string inlines)
-    {
-        var p = inlines.Split(new[] { "\n" }, StringSplitOptions.None);
-        foreach (var el in p)
+        private static string GetMessageLine(string inlines)
         {
-            if (el.Contains("\"message\":"))
+            var p = inlines.Split(new[] { "\n" }, StringSplitOptions.None);
+            foreach (var el in p)
             {
-                return el.Trim();
-            }
-        }
-        return "";
-    }
-
-    //Google photo uploader and other programs will incorrectly start messing with files before they're finished.
-    //1. if you save them with another extension which would be ignored, then you get locking issues when trying to move them.
-    //2. so instead i just save them out of view then move them back.
-    private static void DownloadCompleted(object sender, AsyncCompletedEventArgs e, string tempfp, string fp)
-    {
-        try
-        {
-            var uniquefp = fp.Replace(".png", "_1.png");
-            var tries = 0;
-            while (true)
-            {
-                if (!System.IO.File.Exists(uniquefp))
+                if (el.Contains("\"message\":"))
                 {
-                    break;
+                    return el.Trim();
                 }
-                tries++;
-                uniquefp = fp.Replace(".png", $"_{tries}.png");
             }
-            System.IO.File.Move(tempfp, uniquefp);
-            Statics.Logger.Log($"Saved to:\t\t\"{uniquefp}\"");
+            return "";
         }
-        catch (Exception ex)
+
+        //Google photo uploader and other programs will incorrectly start messing with files before they're finished.
+        //1. if you save them with another extension which would be ignored, then you get locking issues when trying to move them.
+        //2. so instead i just save them out of view then move them back.
+        //3. we also delay creating the unique filename.
+        //4. also save an annotated version?
+        private static void DownloadCompleted(object sender, AsyncCompletedEventArgs e, string tempfp, string fp, string prompt)
         {
-            var a = 4;
-            Statics.Logger.Log(ex.ToString());
+            
+            try
+            {
+                var ann = new Annotator();
+                var uniquefp = fp.Replace(".png", "_1.png");
+                var tries = 0;
+                while (true)
+                {
+                    if (!System.IO.File.Exists(uniquefp))
+                    {
+                        break;
+                    }
+                    tries++;
+                    uniquefp = fp.Replace(".png", $"_{tries}.png");
+                }
+                System.IO.File.Move(tempfp, uniquefp);
+                var annotatedFp = uniquefp.Replace(".png", "_annotated.png");
+                
+                ann.Annotate(uniquefp, annotatedFp, prompt);
+                Statics.Logger.Log($"Saved to:\t\t\"{uniquefp}\"");
+            }
+            catch (Exception ex)
+            {
+                var a = 4;
+                Statics.Logger.Log(ex.ToString());
+            }
         }
     }
-}
 }

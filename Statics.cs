@@ -82,6 +82,7 @@ namespace Dalle3
                 }
                 if (s == "/help" || s == "/h" || s == "/?" || s == "-help" || s == "--help" || s == "-ayuda" || s == "--h")
                 {
+                    Console.WriteLine($"You triggered the help display by typing: {s}, so printing it and quitting.");
                     Usage();
                     Environment.Exit(0);
                 }
