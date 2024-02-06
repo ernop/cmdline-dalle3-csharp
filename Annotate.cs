@@ -10,19 +10,22 @@ using Image = System.Drawing.Image;
 public class Annotator
 {
     public Graphics FakeGraphics { get; set; } = Graphics.FromImage(new Bitmap("../../image.png"));
+    
+    public static int LineSize { get; set; } = 23;
+    public static int FontSize { get; set; } = 18;
     public Font Font { get; set; } = new Font("Gotham", FontSize, FontStyle.Regular);
-    public Font MyFont { get; set; } = new Font("Gotham", 18, FontStyle.Bold);
-    public static int LineSize { get; set; } = 45;
-    public static int FontSize { get; set; } = 36;
+    public Font LabelFont { get; set; } = new Font("Gotham", FontSize/2, FontStyle.Bold);
+
     //Unused currently, but we should move text in a bit to make it more visible in twitter previews where now it's slightly cut off.
     public static int HorizontalBuffer { get; set; } = 10;
 
-    //extra y to add to images in annotation section as a kind of vertical buffer.
-    public static int TextExtraY { get; set; } = LineSize / 2 + 5;
-    
+    /// <summary>
+    /// just split it up into lines based on the width you have to display it in.
+    /// Luckily you can easily adjust this to make it wrap around the image some too.
+    /// </summary>
     public List<string> GetTextInLines(string text, int pixelWidth)
     {
-        //for some reason we need a  "real" graphics object to calculate text widths based off of.
+        //for some reason we need a "real" graphics object to calculate text widths based off of.
         var remainingText = text;
         var parts = remainingText.Split('\n');
         var lines = new List<string>();
@@ -67,53 +70,66 @@ public class Annotator
         return lines;
     }
 
-    public async Task<string> Annotate(string source, string dest, string text)
+    /// <summary>
+    /// Annotate an image file at source with black text and a light text below (optional), expanding the height of the image and
+    /// trying not to lose any pixels.
+    /// </summary>
+    public async Task<string> Annotate(string srcFp, string destFp, string text, bool includeSourceLabel)
     {
-        var outputImageToAnnotate = Image.FromFile(source);
+        var inputImageToAnnotate = Image.FromFile(srcFp);
         Size outputSize;
 
         var outputOffsetX = 0;
 
-        var maxYSeen = outputImageToAnnotate.Height;
-        outputSize = outputImageToAnnotate.Size;
+        var originalImageYHeightPixels = inputImageToAnnotate.Height;
+        outputSize = inputImageToAnnotate.Size;
 
         var lines = GetTextInLines(text, outputSize.Width);
 
-        var extraYPixels = LineSize * lines.Count + TextExtraY;
+        var sourceLabelExtraYPixels = 0;
+        if (includeSourceLabel)
+        {
+            sourceLabelExtraYPixels = LineSize / 2+20;
+        }
+
+        var extraYPixels = LineSize * lines.Count + sourceLabelExtraYPixels;
 
         var im = new Bitmap(outputSize.Width, outputSize.Height + extraYPixels);
 
         var graphics = Graphics.FromImage(im);
         graphics.Clear(Color.Black);
 
-        graphics.DrawImage(outputImageToAnnotate, new Point(outputOffsetX, 0));
+        graphics.DrawImage(inputImageToAnnotate, new Point(outputOffsetX, 0));
 
-        outputImageToAnnotate.Dispose();
+        inputImageToAnnotate.Dispose();
         var brush = new SolidBrush(Color.White);
 
         var ii = 0;
         foreach (var line in lines)
         {
-            var pos = (float)Math.Floor((double)(maxYSeen + TextExtraY / 2 + ii * LineSize));
+            var pos = (float)Math.Floor((double)(originalImageYHeightPixels + sourceLabelExtraYPixels / 2 + ii * LineSize));
             graphics.DrawString(line, Font, brush, new PointF(0, pos));
 
             ii += 1;
         }
 
-        //add my watermarking etc here.  Slightly annoying since to be perfect I should maybe calculate the remaining Y space left for my small annotation?
-        //But that's annoying. Rather just add 10pix or so to the bottom by default and fill mine in there.
-        var SAIconpos = (float)Math.Floor((double)(maxYSeen + TextExtraY / 2 + (ii - 1) * LineSize) + 16);
+        if (includeSourceLabel)
+        {
+            //add my watermarking etc here.  Slightly annoying since to be perfect I should maybe calculate the remaining Y space left for my small annotation?
+            //But that's annoying. Rather just add 10pix or so to the bottom by default and fill mine in there.
+            var labelPos = (float)Math.Floor((double)(originalImageYHeightPixels + lines.Count * LineSize + 2));
 
-        var myFixedText = "Dalle3-cmdline";
-        var w = FakeGraphics.MeasureString(myFixedText, MyFont);
-        var p = new PointF(im.Width - w.Width - 4, SAIconpos);
-        var verDarkGrey = Color.FromArgb(255, 36, 36, 36);
-        var mybrush = new SolidBrush(verDarkGrey);
-        graphics.DrawString(myFixedText, MyFont, mybrush, p);
+            var myFixedText = "Dalle3-cmdline";
+            var w = FakeGraphics.MeasureString(myFixedText, LabelFont);
+            var p = new PointF(im.Width - w.Width - 4, labelPos);
+            var verDarkGrey = Color.FromArgb(255, 36, 36, 36);
+            var mybrush = new SolidBrush(verDarkGrey);
+            graphics.DrawString(myFixedText, LabelFont, mybrush, p);
+        }
 
         graphics.Save();
-        im.Save(dest);
-        Logger.Log($"Successfully saved new fp: {dest}");
-        return dest;
+        im.Save(destFp);
+        Logger.Log($"Successfully saved new fp: {destFp}");
+        return destFp;
     }
 }

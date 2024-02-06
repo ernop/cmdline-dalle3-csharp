@@ -8,6 +8,9 @@ namespace Dalle3
     {
         public string RawPrompt { get; set; }
         public List<string> EffectivePrompts { get; set; } = new List<string>();
+        public bool IncludeNormalImageOutput { get; set; }
+        public bool IncludeAnnotatedImageOutput { get; set; }
+
         public int ImageNumber { get; set; }
         /// <summary>
         /// This refers to the order that images are generated. Going random gives you faster visibility into coverage

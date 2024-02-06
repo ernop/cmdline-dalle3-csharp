@@ -19,6 +19,9 @@ namespace Dalle3
 {
     internal class Program
     {
+        public static int SentCount { get; set; } = 0;
+        public static int DoneCount { get; set; } = 0;
+
         static void Main(string[] args)
         {
             var api = new OpenAI_API.OpenAIAPI(Statics.ApiKey);
@@ -51,6 +54,14 @@ namespace Dalle3
                 //inp = "{Watercolor, Illustration, Sprang} of {Boy, Woman, Man} in {Mystery, Romance, Science Fiction} set {Mountains}. -r";
 
                 inp = "A splendid cat in {GPTLocations}";
+                inp = "“Tiger, one day you will come to a fork in the road,” he said. “And you’re going to have to make a decision about which direction you want to go.” He raised his hand and pointed. “If you go that way you can be somebody. You will have to make compromises and you will have to turn your back on your friends. But you will be a member of the club and you will get promoted and you will get good assignments.” Then Boyd raised his other hand and pointed another direction. “Or you can go that way and you can do something—something for your country and for your Air Force and for yourself. If you decide you want to do something, you may not get promoted and you may not get the good assignments and you certainly will not be a favorite of your superiors. But you won’t have to compromise yourself. You will be true to your friends and to yourself. And your work might make a difference.” He paused and stared into Leopold’s eyes and heart. “To be somebody or to do something. In life there is often a roll call. That’s when you will have to make a decision. To be or to do? Which way will you go?” " +
+                    "{GPTLocations}" +
+                    "{GPTStyles}  -r";
+                inp = "Three can keep a secret, if two of them are dead. {GPTLocations} {GPTStyles}  -r -hd -h";
+                inp = " -hd -h -3   Cozy Café in Downtown San Francisco: The Apple Vision Pro™, a white modern curved AR/VR device makes its grand entrance into the vintage café, worn by Alex, a software developer with a knack for immersing himself in the latest technology. His friends, Mia and Liam, are initially amused by Alex's enthusiastic demonstration of the device's capabilities. Mia, with her mismatched clothes and sketchbook in hand, playfully teases Alex about living in a virtual world. Liam, adjusting his signature bow tie, tries the device with a mix of curiosity and skepticism. As Alex dives deeper into his augmented reality, the café buzzes with his exclamations and virtual interactions. Mia's amusement turns to annoyance as she fails to capture Alex's attention for a real-world conversation. She confronts him, her words sharp but tinged with concern. Liam, ever the mediator, attempts to bridge the gap between technology and personal connection. The tension escalates as Zara, the novelist in the corner, observes intently, her typewriter forgotten. The scene reaches a fever pitch as Alex, engrossed in his AR world, accidentally knocks over Mia's coffee, spilling it over her sketchbook. The café falls silent, all eyes on the trio, as Mia's next words hang in the air, poised to either forgive or further inflame the situation.";
+                inp = "-hd -h -3  Bustling New York Subway During Rush Hour: On the crowded subway, Jordan dons the Apple Vision Pro™, a white modern curved AR/VR device, his eyes alight with the thrill of the latest gadget. His excitement, however, is oblivious to the cramped space and the weary commuters around him. Emily, just off a grueling night shift, watches with a mix of exhaustion and irritation as Jordan bumps into her repeatedly, lost in his augmented adventure. Carlos, with his camera slung over his shoulder, is initially captivated by the technology but grows concerned about Jordan's lack of spatial awareness. The tension in the subway car builds as Jordan, engrossed in his game, nearly steps on Rachel, the retired schoolteacher. Rachel, her patience fraying, confronts Jordan with a stern reprimand about respecting others' space. The situation escalates as more passengers express their frustration. Jordan, finally snapping out of his virtual world, realizes the chaos he's caused. As he begins to apologize, the subway lurches unexpectedly, throwing him off balance and into a moment of vulnerability that could either lead to a heated confrontation or an understanding resolution.\r\n";
+                //inp = "-hd -h -3  Trendy Rooftop Bar in Los Angeles at Night: The night is alive at the rooftop bar as Chloe showcases her Apple Vision Pro™, live-streaming her experience to her online followers. Her vibrant personality and daring fashion choices draw attention, but not all of it is positive. Ethan, trying to impress his date, finds Chloe's loud streaming disruptive to the romantic ambiance he's trying to create. Nina, spotting a potential social media rivalry, watches Chloe with a calculating eye. The bar's atmosphere shifts from celebratory to tense as Ethan approaches Chloe, his request for her to lower her voice clashing with her desire for online engagement. Nina senses an opportunity and intervenes, suggesting a collaboration that could either defuse the situation or escalate it. Derek, the bartender, watches the unfolding drama, ready to step in if the conflict disrupts his patrons' enjoyment. As Chloe turns to respond, her stream captures a moment that could either skyrocket her fame or lead to a social media disaster, leaving her followers on the edge of their seats.";
+                //inp = "-hd -h -3 Public Library in Chicago: Sarah, wearing the sleek Apple Vision Pro™, enters the library, her voice echoing as she narrates her experience for her tech blog. Her enthusiasm, however, disrupts the library's tranquil ambiance. Mr. Thompson, the librarian, watches with a mix of fascination and concern, his love for order clashing with his curiosity about new technology. Ben, cramming for his finals, tries to concentrate but finds his attention repeatedly diverted by Sarah's loud commentary. The library, usually a haven of quiet study, becomes a stage for a growing conflict. Sophie, another tech enthusiast, is intrigued by the device but disapproves of Sarah's disregard for library etiquette. The tension comes to a head as Ben confronts Sarah, his frustration boiling over. Words are exchanged, each more heated than the last. Sarah, caught off guard, faces a choice: to defend her right to explore technology or to acknowledge the disruption she's caused. The library holds its breath, waiting for her response, as the situation teeters on the edge of a dramatic climax.";
                 args = inp.Split();
             }
 
@@ -70,6 +81,7 @@ namespace Dalle3
             //other ones in the group which might actually be okay.
             var badPrompts = new List<string>();
             var actuallyGeneratedCount = 0;
+            var start = DateTime.Now;
 
             if (args.Length > 0)
             {
@@ -80,8 +92,8 @@ namespace Dalle3
                     Usage();
                     return;
                 }
-                var list = new List<Task<bool>>();
                 Statics.Logger.Log($"There are: {modelOptions.EffectivePrompts.Count} prompts, which we will repeat {modelOptions.ImageNumber} times.");
+
                 for (var ii = 0; ii < modelOptions.ImageNumber; ii++)
                 {
                     foreach (var subPrompt in modelOptions.EffectivePrompts)
@@ -91,7 +103,7 @@ namespace Dalle3
                             Statics.Logger.Log($"\r\n-----------Skipping due to previous badness: {badPrompts} {ii}");
                             continue;
                         }
-                        GenerateOneImageAsync(api, subPrompt, modelOptions.Size, modelOptions.Quality);
+                        var res = GenerateOneImageAsync(api, subPrompt, modelOptions.Size, modelOptions.Quality);
                         actuallyGeneratedCount++;
 
                         if (actuallyGeneratedCount >= 300)
@@ -99,18 +111,19 @@ namespace Dalle3
                             Statics.Logger.Log("break early due to generating so many. =================.");
                             break;
                         }
+
+                        ///okay just pause if you find yourself (temporarily) over the rate limit.
+                        var actualGenerationRate = actuallyGeneratedCount / (DateTime.Now - start).TotalMinutes;
+                        if (actualGenerationRate > GetMyImagesPerMinuteRateLimit())
+                        {
+                            //damn, how do I format this to not show many digits of numbers, just 2 digits?
+                            Statics.Logger.Log($"sleeping: 4s since my generation rate was at: {actualGenerationRate.ToString("0.00")}/min, and based on the hardcoded tier I am in in statics.cs, my limit in images/min is: {GetMyImagesPerMinuteRateLimit()}");
+                            System.Threading.Thread.Sleep(4000);
+                        }
                     }
 
-                    //we are rate limited at 7/min so we should wait a little bit longer than that.
-                    //tier 3 = 7
-                    //tier 4 = 15
-                    //tier 5 = 50
-                    var myRateLimit = 15.0;
-                    var amt = 1000 * (60 / (myRateLimit - 1));
-                    Statics.Logger.Log($"sleeping: {amt / 1000}");
-                    System.Threading.Thread.Sleep((int)amt);
                 }
-                Statics.Logger.Log("Done, waiting for you to hit a button to give time for the last image to dl.");
+                Statics.Logger.Log($"{DoneCount}/{SentCount} Done, waiting for you to hit a button to give time for the last image to dl.");
                 Console.ReadLine();
             }
             else
@@ -120,7 +133,7 @@ namespace Dalle3
             }
         }
 
-        static bool GenerateOneImageAsync(OpenAI_API.OpenAIAPI api, string prompt, ImageSize size, string quality)
+        static async Task<bool> GenerateOneImageAsync(OpenAI_API.OpenAIAPI api, string prompt, ImageSize size, string quality)
         {
             var req = new ImageGenerationRequest();
             req.Model = OpenAI_API.Models.Model.DALLE3;
@@ -129,13 +142,14 @@ namespace Dalle3
             //so fix it here for tracking.
             req.Quality = quality ?? "standard";
             prompt = Substitutions.SubstituteExpansionsIntoPrompt(prompt);
-            req.Prompt = prompt;
+            req.Prompt = prompt.Substring(0,Math.Min(prompt.Length, 3000));
             req.Size = size;
 
             var l = req.Prompt.Length;
             var displayedPromptLength = 200;
             Statics.Logger.Log($"Sending to imagemaker:\t\"{req.Prompt.Substring(0, Math.Min(l, displayedPromptLength))}\"");
-            var res = api.ImageGenerations.CreateImageAsync(req);
+            SentCount++;
+            var res = await api.ImageGenerations.CreateImageAsync(req);
             var outfn = Statics.PromptToFilename(req);
 
             //this is the final destination; in actuality we will temporarily store them up one folder!
@@ -153,13 +167,9 @@ namespace Dalle3
                     try
                     {
                         client.DownloadFileCompleted += (sender, e) => DownloadCompleted(sender, e, tempFP, fp, prompt);
-                        client.DownloadFileAsync(new Uri(res.Result.Data[0].Url), tempFP);
+                        client.DownloadFileAsync(new Uri(res.Data[0].Url), tempFP);
                         downloadRes = true;
                         break;
-                        //var ann = new Annotator();
-                        //var annotatedfp = fp.Replace(".png", "_annotated.png");
-                        //ann.Annotate(fp, annotatedfp, prompt);
-                        //IEnumerable<Directory> directories = ImageMetadataReader.ReadMetadata(fp);
                     }
                     catch (Exception ex)
                     {
@@ -198,6 +208,20 @@ namespace Dalle3
                             downloadRes = false;
                             break;
                         }
+                        else if (ex.InnerException.Message.Contains("invalid_request_error") && ex.InnerException.Message.Contains(" is too long - \'prompt\'"))
+                        {
+                            Statics.Logger.Log($"Your prompt was {req.Prompt.Length} characters and it started: \"{req.Prompt.Substring(0,30)}...\". This is too long. The actual limit is X.");
+                            downloadRes = false;
+                            break;
+                        }
+                        else if (ex.InnerException.Message.Contains("Rate limit repeatedly exceeded"))
+                        {
+                            Statics.Logger.Log($"You blew up the rate limit unfortunately.");
+                            Statics.Logger.Log($"{GetMessageLine(ex.InnerException.Message)}");
+                            downloadRes = false;
+                            break;
+                        }
+                        
                         else
                         {
                             Statics.Logger.Log($"\t.\t\"{req.Prompt}\"");
@@ -231,7 +255,6 @@ namespace Dalle3
         //4. also save an annotated version?
         private static void DownloadCompleted(object sender, AsyncCompletedEventArgs e, string tempfp, string fp, string prompt)
         {
-            
             try
             {
                 var ann = new Annotator();
@@ -249,8 +272,9 @@ namespace Dalle3
                 System.IO.File.Move(tempfp, uniquefp);
                 var annotatedFp = uniquefp.Replace(".png", "_annotated.png");
                 
-                ann.Annotate(uniquefp, annotatedFp, prompt);
-                Statics.Logger.Log($"Saved to:\t\t\"{uniquefp}\"");
+                ann.Annotate(uniquefp, annotatedFp, prompt, true);
+                DoneCount++;
+                Statics.Logger.Log($"Saved {DoneCount}/{SentCount} to:\t\t\"{uniquefp}\"");
             }
             catch (Exception ex)
             {
