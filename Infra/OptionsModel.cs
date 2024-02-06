@@ -7,7 +7,7 @@ namespace Dalle3
     class OptionsModel
     {
         public string RawPrompt { get; set; }
-        public List<string> EffectivePrompts { get; set; } = new List<string>();
+        public IEnumerable<IPromptSection> PromptSections{ get; set; }
         public bool IncludeNormalImageOutput { get; set; }
         public bool IncludeAnnotatedImageOutput { get; set; }
 

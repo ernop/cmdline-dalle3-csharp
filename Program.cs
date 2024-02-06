@@ -10,26 +10,28 @@ using System.Threading.Tasks;
 using System.CodeDom.Compiler;
 using System.Linq;
 using static Dalle3.Statics;
-using static Dalle3.Substitutions;
+
 using System.ComponentModel;
 using System.IO;
 using System.Diagnostics.Eventing.Reader;
 using MetadataExtractor.Formats.Gif;
 using System.Threading;
+using MetadataExtractor.Formats.Exif.Makernotes;
 
 namespace Dalle3
 {
     internal class Program
     {
-        public static int SentCount { get; set; } = 0;
-        public static int DoneCount { get; set; } = 0;
+        public static int RequestedCount { get; set; } = 0;
+        public static int DownloadedCount { get; set; } = 0;
+        public static int ErrorCount{ get; set; } = 0;
 
         static async Task Main(string[] args)
         {
-            await Thingie(args);
+            await AsyncMain(args);
         }
 
-        static async Task Thingie(string[] args)
+        static async Task AsyncMain(string[] args)
         {
             var tasks = new List<Task>();
             var throttler = new SemaphoreSlim(10, 10);
@@ -62,164 +64,157 @@ namespace Dalle3
                 Usage();
                 Environment.Exit(0);
             }
-            Statics.Logger.Log($"There are: {optionsModel.EffectivePrompts.Count} prompts, which we will repeat {optionsModel.ImageNumber} times.");
+            //Statics.Logger.Log($"There are: {optionsModel.EffectivePrompts.Count} prompts, which we will repeat {optionsModel.ImageNumber} times.");
             var api = new OpenAI_API.OpenAIAPI(Statics.ApiKey);
-            var badPrompts = new List<string>();
-            var actuallyGeneratedCount = 0;
+            
             var start = DateTime.Now;
-
+            
             for (var ii = 0; ii < optionsModel.ImageNumber; ii++)
             {
-                foreach (var subPrompt in optionsModel.EffectivePrompts)
+                //general obey rate limit.
+                await throttler.WaitAsync();
+
+                var taskId = ii+10000;
+                var textSections = optionsModel.PromptSections.ToList().Select(x => x.Sample());
+
+                var req = new ImageGenerationRequest();
+                req.Model = OpenAI_API.Models.Model.DALLE3;
+
+                //the library magically returns null when the actual object is "standard" and you are using dalle3 for some reason.
+                //so fix it here for tracking.
+                req.Quality = quality ?? "standard";
+                //var usingSubPrompt = Substitutions.SubstituteExpansionsIntoPrompt(subPrompt);
+                req.Prompt = string.Join(" ", textSections.Select(el => el.L));
+                req.Size = optionsModel.Size;
+                var humanReadable = string.Join("_", textSections.Select(el => el.GetValueForHumanConsumption()));
+
+                var l = req.Prompt.Length;
+                var displayedPromptLength = 200;
+                Statics.Logger.Log($"Sending to imagemaker:\t\"{req.Prompt.Substring(0, Math.Min(l, displayedPromptLength))}\"");
+
+                //during asyncification: actually, I was already doing things wrong, probably. This 
+                // method is actually where the exceptions were popping out of, but like 100% of the time, the path from here to the big try catch below
+                //was so fast, we'd probably always be there already by the time an exception was thrown.
+
+                //the plan now: copy all the significant stuff from in there into this block, including exception handling. That way
+                //each guy gets handled one by one, and the exceptions never pop up.
+                //AND we can use semaphoreslim to manage it, smartly, so we can still jam up the outbound queue
+
+                //okay so the idea now is that we have a "danger zone" which we enter.
+                //we want to may tasks async so they can run past that point, but don't let them escape the trycatch
+                //until we know they are done and can't at all be risky anymore.
+                var task = Task.Run(async () =>
                 {
-                    //general obey rate limit.
-                    await throttler.WaitAsync();
+                    RequestedCount++;
+                    var res = api.ImageGenerations.CreateImageAsync(req);
 
-                    var taskId = ii;
-                    if (badPrompts.IndexOf(subPrompt) != -1)
+                    //this is the final destination; in actuality we will temporarily store them up one folder!
+                    //also we reserve this location with something.
+                    var destFp = Statics.PromptToDestFpWithReservation(req, humanReadable, taskId);
+                    var tempFp = $"{Path.GetTempPath()}{taskId}.png";
+
+                    using (WebClient client = new WebClient())
                     {
-                        Statics.Logger.Log($"\r\n-----------Skipping due to previous badness: {badPrompts} {ii}");
-                        continue;
-                    }
-
-                    var req = new ImageGenerationRequest();
-                    req.Model = OpenAI_API.Models.Model.DALLE3;
-
-                    //the library magically returns null when the actual object is "standard" and you are using dalle3 for some reason.
-                    //so fix it here for tracking.
-                    req.Quality = quality ?? "standard";
-                    var usingSubPrompt = Substitutions.SubstituteExpansionsIntoPrompt(subPrompt);
-                    req.Prompt = usingSubPrompt.Substring(0, Math.Min(usingSubPrompt.Length, 3000));
-                    req.Size = optionsModel.Size;
-
-                    var l = req.Prompt.Length;
-                    var displayedPromptLength = 200;
-                    Statics.Logger.Log($"Sending to imagemaker:\t\"{req.Prompt.Substring(0, Math.Min(l, displayedPromptLength))}\"");
-                    SentCount++;
-
-                    //during asyncification: actually, I was already doing things wrong, probably. This 
-                    // method is actually where the exceptions were popping out of, but like 100% of the time, the path from here to the big try catch below
-                    //was so fast, we'd probably always be there already by the time an exception was thrown.
-
-                    //the plan now: copy all the significant stuff from in there into this block, including exception handling. That way
-                    //each guy gets handled one by one, and the exceptions never pop up.
-                    //AND we can use semaphoreslim to manage it, smartly, so we can still jam up the outbound queue
-
-                    //okay so the idea now is that we have a "danger zone" which we enter.
-                    //we want to may tasks async so they can run past that point, but don't let them escape the trycatch
-                    //until we know they are done and can't at all be risky anymore.
-                    var task = Task.Run(async () =>
-                    {
-                        var res = api.ImageGenerations.CreateImageAsync(req);
-                        var outfn = Statics.PromptToFilename(req);
-
-                        //this is the final destination; in actuality we will temporarily store them up one folder!
-
-                        var fp = $"d:/proj/dalle3/output/{outfn}";
-
-                        var tries = 0;
-                        var downloadRes = false;
-                        while (tries < 5)
+                        try
                         {
-                            tries++;
-                            var randomSuffix = new Random().Next(1000, 9999);
-                            var tempFP = $"{Path.GetTempPath()}{randomSuffix}.png";
+                            //client.DownloadProgressChanged += (sender, e) => DownloadProgressHappened(sender, e, tempFp, fp, req.Prompt);
+                            client.DownloadFileCompleted += (sender, e) => DownloadCompleted(sender, e, tempFp, destFp, req.Prompt, textSections);
+                            client.DownloadFileAsync(new Uri(res.Result.Data[0].Url), tempFp);
+                        }
 
-                            using (WebClient client = new WebClient())
+                        catch (Exception ex)
+                        {
+                            ErrorCount++;
+                            if (ex.InnerException.Message.Contains("Your request was rejected as a result of our safety system. Your prompt may contain text that is not allowed by our safety system."))
                             {
-                                try
-                                {
-                                    client.DownloadProgressChanged += (sender, e) => DownloadProgressHappened(sender, e, tempFP, fp, req.Prompt);
-                                    client.DownloadFileCompleted += (sender, e) => DownloadCompleted(sender, e, tempFP, fp, req.Prompt);
-                                    await client.DownloadFileTaskAsync(new Uri(res.Result.Data[0].Url), tempFP);
-                                    downloadRes = true;
-                                    break;
-                                }
-
-                                catch (Exception ex)
-                                {
-                                    if (ex.InnerException.Message.Contains("Your request was rejected as a result of our safety system. Your prompt may contain text that is not allowed by our safety system."))
-                                    {
-                                        Statics.Logger.Log($"Prompt rejection.\t\"{req.Prompt}\"");
-                                        downloadRes = false;
-                                        break;
-                                    }
-                                    else if (ex.InnerException.Message.Contains("Your request was rejected as a result of our safety system. Image descriptions generated from your prompt may contain text that is not allowed by our safety system. If you believe this was done in error, your request may succeed if retried, or by adjusting your prompt."))
-                                    {
-                                        Statics.Logger.Log($"Image descriptions from output were bad.\t\"{req.Prompt}\"");
-                                        downloadRes = false;
-                                        break;
-                                    }
-                                    else if (ex.InnerException.Message.Contains("This request has been blocked by our content filters."))
-                                    {
-                                        Statics.Logger.Log($"Content filter block.\t\"{req.Prompt}\"");
-                                        downloadRes = false;
-                                        break;
-                                    }
-                                    else if (ex.InnerException.Message.Contains("\"Rate limit exceeded for images per minute in organization"))
-                                    {
-                                        var sleepTime = 10;
-                                        Statics.Logger.Log($"{ex.InnerException.Message}  sleep for: {sleepTime * 1000}");
-                                        //after sleeping, then try to download again.
-                                        continue;
-                                    }
-                                    else if (ex.InnerException.Message.Contains("\"Billing hard limit has been reached\""))
-                                    {
-                                        Statics.Logger.Log(ex.InnerException.Message);
-                                        downloadRes = false;
-                                        break;
-                                    }
-                                    else if (ex.InnerException.Message.Contains("invalid_request_error") && ex.InnerException.Message.Contains(" is too long - \'prompt\'"))
-                                    {
-                                        Statics.Logger.Log($"Your prompt was {req.Prompt.Length} characters and it started: \"{req.Prompt.Substring(0, 30)}...\". This is too long. The actual limit is X.");
-                                        downloadRes = false;
-                                        break;
-                                    }
-                                    else if (ex.InnerException.Message.Contains("Rate limit repeatedly exceeded"))
-                                    {
-                                        Statics.Logger.Log($"You blew up the rate limit unfortunately.");
-                                        Statics.Logger.Log($"{GetMessageLine(ex.InnerException.Message)}");
-                                        downloadRes = false;
-                                        break;
-                                    }
-
-                                    else
-                                    {
-                                        Statics.Logger.Log($"\t.\t\"{req.Prompt}\"");
-                                        Statics.Logger.Log($"{GetMessageLine(ex.InnerException.Message)}");
-                                        downloadRes = false;
-                                        break;
-                                    }
-                                }
-                                finally
-                                {
-                                    throttler.Release();
-                                }
+                                Statics.Logger.Log($"Prompt rejection.\t\"{req.Prompt}\"");
+                                System.IO.File.Delete(destFp);
+                                UpdateWithFilterResult(textSections, TextChoiceResultEnum.PromptRejected);
+                            }
+                            else if (ex.InnerException.Message.Contains("Your request was rejected as a result of our safety system. Image descriptions generated from your prompt may contain text that is not allowed by our safety system. If you believe this was done in error, your request may succeed if retried, or by adjusting your prompt."))
+                            {
+                                Statics.Logger.Log($"Image descriptions from output were bad.\t\"{req.Prompt}\"");
+                                System.IO.File.Delete(destFp);
+                                UpdateWithFilterResult(textSections, TextChoiceResultEnum.DescriptionsBad);
+                            }
+                            else if (ex.InnerException.Message.Contains("This request has been blocked by our content filters."))
+                            {
+                                Statics.Logger.Log($"Content filter block.\t\"{req.Prompt}\"");
+                                System.IO.File.Delete(destFp);
+                                UpdateWithFilterResult(textSections, TextChoiceResultEnum.RequestBlocked);
+                            }
+                            else if (ex.InnerException.Message.Contains("\"Rate limit exceeded for images per minute in organization"))
+                            {
+                                var sleepTime = 10;
+                                Statics.Logger.Log($"{ex.InnerException.Message}  sleep for: {sleepTime}s");
+                                //UpdateWithFilterResult(textSections, TextChoiceResultEnum.RateLimit);
+                                System.IO.File.Delete(destFp);
+                                await Task.Delay(sleepTime * 1000);
+                            }
+                            else if (ex.InnerException.Message.Contains("\"Billing hard limit has been reached\""))
+                            {
+                                Statics.Logger.Log(ex.InnerException.Message);
+                                System.IO.File.Delete(destFp);
+                                UpdateWithFilterResult(textSections, TextChoiceResultEnum.BillingLimit);
+                            }
+                            else if (ex.InnerException.Message.Contains("invalid_request_error") && ex.InnerException.Message.Contains(" is too long - \'prompt\'"))
+                            {
+                                Statics.Logger.Log($"Your prompt was {req.Prompt.Length} characters and it started: \"{req.Prompt.Substring(0, 30)}...\". This is too long. The actual limit is X.");
+                                System.IO.File.Delete(destFp);
+                                UpdateWithFilterResult(textSections, TextChoiceResultEnum.TooLong);
+                            }
+                            else if (ex.InnerException.Message.Contains("Rate limit repeatedly exceeded"))
+                            {
+                                Statics.Logger.Log($"You blew up the rate limit unfortunately.");
+                                Statics.Logger.Log($"{GetMessageLine(ex.InnerException.Message)}");
+                                System.IO.File.Delete(destFp);
+                                UpdateWithFilterResult(textSections, TextChoiceResultEnum.RateLimitRepeatedlyExceeded);
+                            }
+                            else
+                            {
+                                Statics.Logger.Log($"\tUnknownException.\t\"{req.Prompt}\"\r\n{ex}");
+                                Statics.Logger.Log($"{GetMessageLine(ex.InnerException.Message)}");
+                                System.IO.File.Delete(destFp);
                             }
                         }
-                    });
-
-                    tasks.Add(task);
-
-                    actuallyGeneratedCount++;
-
-                    if (actuallyGeneratedCount >= 300)
-                    {
-                        Statics.Logger.Log("break early due to generating so many. =================.");
-                        break;
+                        finally
+                        {
+                            throttler.Release();
+                        }
                     }
-                }
-                if (actuallyGeneratedCount >= 300)
+                });
+
+                tasks.Add(task);
+
+                if (DownloadedCount >= 300)
                 {
                     Statics.Logger.Log("break early due to generating so many. =================.");
                     break;
                 }
             }
 
-            Statics.Logger.Log("Got to end, now doing task.whenall. =================.");
+            Statics.Logger.Log("Got to end, waiting. =================.");
             await Task.WhenAll(tasks);
-            Statics.Logger.Log("done with WhenALL. =================.");
-            Statics.Logger.Log($"{DoneCount}/{SentCount} Done, waiting for you to hit a button to give time for the last image to dl.");
+            Statics.Logger.Log("======done with WhenALL. =================.");
+            
+            while (true)
+            {
+                Statics.Logger.Log($"\tDownloaded:{DownloadedCount}, Requested:{RequestedCount}, Errored:{ErrorCount}");
+                if (RequestedCount <= DownloadedCount + ErrorCount)
+                {
+                    break;
+                }
+                await Task.Delay(1000);
+            }
+            
+            Statics.Logger.Log("======Reports: =================.");
+            foreach (var el in optionsModel.PromptSections)
+            {
+                Statics.Logger.Log(el.ReportResults());
+            }
+
+            Statics.Logger.Log($"{DownloadedCount}/{RequestedCount} downloaded successfully ({100.0*DownloadedCount / (RequestedCount * 1.0):0.0}%). Hit a key to end.");
+
             Console.ReadLine();
         }
 
@@ -238,10 +233,10 @@ namespace Dalle3
 
         private static void DownloadProgressHappened(object sender, DownloadProgressChangedEventArgs e, string tempfp, string fp, string prompt)
         {
-            var progress = e.UserState as DownloadProgressChangedEventArgs;
+            var progress = e as DownloadProgressChangedEventArgs;
             if (progress != null)
             {
-                Statics.Logger.Log($"Downloading: {progress.ProgressPercentage}%");
+                Statics.Logger.Log($"\t\t{fp}\t{progress.ProgressPercentage}%");
             }
         }
 
@@ -250,69 +245,73 @@ namespace Dalle3
         //2. so instead i just save them out of view then move them back.
         //3. we also delay creating the unique filename.
         //4. also save an annotated version?
-        private static void DownloadCompleted(object sender, AsyncCompletedEventArgs e, string tempfp, string fp, string prompt)
+        private static void DownloadCompleted(object sender, AsyncCompletedEventArgs e, string srcFp, string destFp, string prompt, IEnumerable<InternalTextSection> textSections)
         {
             try
             {
-                var ann = new Annotator();
-                var uniquefp = fp.Replace(".png", "_1.png");
-                var tries = 1;
-                //lets find a new filename we can move the input one to.
-                while (true)
+                //the new reservation system? ugh.
+                if (!System.IO.File.Exists(destFp))
                 {
-                    tries++;
-                    //if its safe to move, then move it.
-                    if (!System.IO.File.Exists(uniquefp))
-                    {
-                        try
-                        {
-                            System.IO.File.Move(tempfp, uniquefp);
-                            Statics.Logger.Log(uniquefp + " success finally.");
-                            break;
-                        }
-                        catch (System.IO.FileNotFoundException ex)
-                        {
-                            //we have already moved the file where its supposed to go.
-                            //Statics.Logger.Log($"Disappeared so going on: {uniquefp}");
-                            break;
-
-                        }
-                        catch (System.IO.IOException ex)
-                        {
-                            //well, sometimes we call download completed... before the image is completely downloaded. yah that's how things go.
-                            Task.WaitAll(Task.Delay(1000));
-                            continue;
-                        }
-
-                        catch (Exception ex)
-                        {
-                            //either it was busy, or the target existed? not sure about that latter thing.
-                            Statics.Logger.Log(uniquefp + " failed.\r\n" + ex.ToString());
-                            Task.WaitAll(Task.Delay(1000));
-                            continue;
-                        }
-                    }
-
-                    //we need to redo the target name cause its gotten taken in the meantime.
-                    if (tries > 40)
-                    {
-                        Statics.Logger.Log(uniquefp + " failed after too many tries================== \r\n");
-                        return;
-                    }
-
-                    uniquefp = fp.Replace(".png", $"_{tries}.png");
+                    throw new Exception("No reservation.");
+                }
+                var fa = new FileInfo(destFp);
+                if (fa.Length > 0)
+                {
+                    throw new Exception("too bad.'");
                 }
 
-                //assume the file exists at uniquefp now.
-                var annotatedFp = uniquefp.Replace(".png", "_annotated.png");
+                try
+                {
+                    System.IO.File.Copy(srcFp, destFp, true);
+                    System.IO.File.Delete(srcFp);
+                    DownloadedCount++;
+                    
+                }
+                catch (System.IO.FileNotFoundException ex)
+                {
+                    //we have already moved the file where its supposed to go.
+                    Statics.Logger.Log($"Disappeared so going on: {destFp}");
+                    ErrorCount++;
+                    //break;
 
-                ann.Annotate(uniquefp, annotatedFp, prompt, true);
-                DoneCount++;
-                Statics.Logger.Log($"Saved {DoneCount}/{SentCount} to:\t\t\"{uniquefp}\"");
+                }
+                catch (System.IO.IOException ex)
+                {
+                    //well, sometimes we call download completed... before the image is completely downloaded. yah that's how things go.
+                    Task.WaitAll(Task.Delay(1000));
+                    Statics.Logger.Log($"IOexcpeton. {ex} {destFp}");
+                    ErrorCount++;
+                    //continue;
+                }
+
+                catch (Exception ex)
+                {
+                    //either it was busy, or the target existed? not sure about that latter thing.
+                    Statics.Logger.Log($"\t{destFp}\tFailed with ex: {ex}.");
+                    Task.WaitAll(Task.Delay(1000));
+                    ErrorCount++;
+                    //continue;
+                }
+
+                UpdateWithFilterResult(textSections, TextChoiceResultEnum.Okay);
+                //we need to redo the target name cause its gotten taken in the meantime.
+
+                var ann = new Annotator();
+                //assume the file exists at uniquefp now.
+                var annotatedFp = destFp.Replace(".png", "_annotated.png");
+                
+                var directory = Path.GetDirectoryName(annotatedFp);
+                var filename = Path.GetFileName(annotatedFp);
+                annotatedFp = directory + "/annotated/" + filename;
+                
+                ann.Annotate(destFp, annotatedFp, prompt, true);
+                
+                Statics.Logger.Log($"\t{DownloadedCount}/{RequestedCount} Saved. \t{destFp}\t");
             }
             catch (Exception ex)
             {
-                Statics.Logger.Log(ex.ToString());
+                Statics.Logger.Log("weird error."+ex.ToString());
+                ErrorCount++;
             }
         }
     }

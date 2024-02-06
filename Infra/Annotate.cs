@@ -10,11 +10,11 @@ using Image = System.Drawing.Image;
 public class Annotator
 {
     public Graphics FakeGraphics { get; set; } = Graphics.FromImage(new Bitmap("../../image.png"));
-    
+
     public static int LineSize { get; set; } = 23;
     public static int FontSize { get; set; } = 18;
     public Font Font { get; set; } = new Font("Gotham", FontSize, FontStyle.Regular);
-    public Font LabelFont { get; set; } = new Font("Gotham", FontSize/2, FontStyle.Bold);
+    public Font LabelFont { get; set; } = new Font("Gotham", FontSize / 2, FontStyle.Bold);
 
     //Unused currently, but we should move text in a bit to make it more visible in twitter previews where now it's slightly cut off.
     public static int HorizontalBuffer { get; set; } = 10;
@@ -89,7 +89,7 @@ public class Annotator
         var sourceLabelExtraYPixels = 0;
         if (includeSourceLabel)
         {
-            sourceLabelExtraYPixels = LineSize / 2+20;
+            sourceLabelExtraYPixels = LineSize / 2 + 20;
         }
 
         var extraYPixels = LineSize * lines.Count + sourceLabelExtraYPixels;
@@ -128,6 +128,10 @@ public class Annotator
         }
 
         graphics.Save();
+        if (System.IO.File.Exists(destFp))
+        {
+            Console.WriteLine($"File already exists. Not overwriting. fp: {destFp}");
+        }
         im.Save(destFp);
         //Logger.Log($"Saved annotated version. fp: {destFp}");
         return destFp;

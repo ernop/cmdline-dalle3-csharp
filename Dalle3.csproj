@@ -64,22 +64,27 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Annotate.cs" />
-    <Compile Include="Blowup.cs" />
-    <Compile Include="Blowups.cs" />
-    <Compile Include="Example.cs" />
-    <Compile Include="Expando.cs" />
-    <Compile Include="Log.cs" />
-    <Compile Include="OptionsModel.cs" />
-    <Compile Include="PermutationExpander.cs" />
+    <Compile Include="classes\Alias.cs" />
+    <Compile Include="classes\InternalTextSection.cs" />
+    <Compile Include="Infra\Annotate.cs" />
+    <Compile Include="classes\Aliases.cs" />
+    <Compile Include="classes\IPromptSection.cs" />
+    <Compile Include="Infra\Log.cs" />
+    <Compile Include="classes\MetaPromptSection.cs" />
+    <Compile Include="Infra\OptionsModel.cs" />
+    <Compile Include="Infra\Parser.cs" />
+    <Compile Include="classes\PermutationPromptSection.cs" />
+    <Compile Include="classes\PowerSetPromptSection.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Statics.cs" />
-    <Compile Include="Substitutions.cs" />
+    <Compile Include="Infra\Statics.cs" />
+    <Compile Include="Infra\TextChoiceResultEnum.cs" />
+    <Compile Include="classes\TextPromptSection.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include=".gitignore" />
     <None Include="App.config" />
+    <None Include="README.md" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="CommandLineParser">

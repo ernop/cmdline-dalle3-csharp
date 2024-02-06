@@ -4,13 +4,12 @@ using OpenAI_API.Models;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Runtime.Remoting.Messaging;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-
-using static Dalle3.Substitutions;
 
 namespace Dalle3
 {
@@ -19,6 +18,7 @@ namespace Dalle3
         public static Logger Logger = new Logger("../../logs/log.txt");
         public static string ApiKey { get; set; } = System.IO.File.ReadAllText("../../apikey.txt");
         public static string OrgId { get; set; } = System.IO.File.ReadAllText("../../organization.txt");
+        public static Random Random = new Random(1000);
 
         public static string OverridePromptForTesting
         {
@@ -50,15 +50,7 @@ namespace Dalle3
                 inp = "“Tiger, one day you will come to a fork in the road,” he said. “And you’re going to have to make a decision about which direction you want to go.” He raised his hand and pointed. “If you go that way you can be somebody. You will have to make compromises and you will have to turn your back on your friends. But you will be a member of the club and you will get promoted and you will get good assignments.” Then Boyd raised his other hand and pointed another direction. “Or you can go that way and you can do something—something for your country and for your Air Force and for yourself. If you decide you want to do something, you may not get promoted and you may not get the good assignments and you certainly will not be a favorite of your superiors. But you won’t have to compromise yourself. You will be true to your friends and to yourself. And your work might make a difference.” He paused and stared into Leopold’s eyes and heart. “To be somebody or to do something. In life there is often a roll call. That’s when you will have to make a decision. To be or to do? Which way will you go?” " +
                     "{GPTLocations}" +
                     "{GPTStyles}  -r";
-                inp = "Three can keep a secret, if two of them are dead. {GPTLocations} {GPTStyles}  -r -hd -h";
-                inp = " -hd -h -3   Cozy Café in Downtown San Francisco: The Apple Vision Pro™, a white modern curved AR/VR device makes its grand entrance into the vintage café, worn by Alex, a software developer with a knack for immersing himself in the latest technology. His friends, Mia and Liam, are initially amused by Alex's enthusiastic demonstration of the device's capabilities. Mia, with her mismatched clothes and sketchbook in hand, playfully teases Alex about living in a virtual world. Liam, adjusting his signature bow tie, tries the device with a mix of curiosity and skepticism. As Alex dives deeper into his augmented reality, the café buzzes with his exclamations and virtual interactions. Mia's amusement turns to annoyance as she fails to capture Alex's attention for a real-world conversation. She confronts him, her words sharp but tinged with concern. Liam, ever the mediator, attempts to bridge the gap between technology and personal connection. The tension escalates as Zara, the novelist in the corner, observes intently, her typewriter forgotten. The scene reaches a fever pitch as Alex, engrossed in his AR world, accidentally knocks over Mia's coffee, spilling it over her sketchbook. The café falls silent, all eyes on the trio, as Mia's next words hang in the air, poised to either forgive or further inflame the situation.";
-                inp = "-hd -h -3  Bustling New York Subway During Rush Hour: On the crowded subway, Jordan dons the Apple Vision Pro™, a white modern curved AR/VR device, his eyes alight with the thrill of the latest gadget. His excitement, however, is oblivious to the cramped space and the weary commuters around him. Emily, just off a grueling night shift, watches with a mix of exhaustion and irritation as Jordan bumps into her repeatedly, lost in his augmented adventure. Carlos, with his camera slung over his shoulder, is initially captivated by the technology but grows concerned about Jordan's lack of spatial awareness. The tension in the subway car builds as Jordan, engrossed in his game, nearly steps on Rachel, the retired schoolteacher. Rachel, her patience fraying, confronts Jordan with a stern reprimand about respecting others' space. The situation escalates as more passengers express their frustration. Jordan, finally snapping out of his virtual world, realizes the chaos he's caused. As he begins to apologize, the subway lurches unexpectedly, throwing him off balance and into a moment of vulnerability that could either lead to a heated confrontation or an understanding resolution.\r\n";
-                //inp = "-hd -h -3  Trendy Rooftop Bar in Los Angeles at Night: The night is alive at the rooftop bar as Chloe showcases her Apple Vision Pro™, live-streaming her experience to her online followers. Her vibrant personality and daring fashion choices draw attention, but not all of it is positive. Ethan, trying to impress his date, finds Chloe's loud streaming disruptive to the romantic ambiance he's trying to create. Nina, spotting a potential social media rivalry, watches Chloe with a calculating eye. The bar's atmosphere shifts from celebratory to tense as Ethan approaches Chloe, his request for her to lower her voice clashing with her desire for online engagement. Nina senses an opportunity and intervenes, suggesting a collaboration that could either defuse the situation or escalate it. Derek, the bartender, watches the unfolding drama, ready to step in if the conflict disrupts his patrons' enjoyment. As Chloe turns to respond, her stream captures a moment that could either skyrocket her fame or lead to a social media disaster, leaving her followers on the edge of their seats.";
-                //inp = "-hd -h -3 Public Library in Chicago: Sarah, wearing the sleek Apple Vision Pro™, enters the library, her voice echoing as she narrates her experience for her tech blog. Her enthusiasm, however, disrupts the library's tranquil ambiance. Mr. Thompson, the librarian, watches with a mix of fascination and concern, his love for order clashing with his curiosity about new technology. Ben, cramming for his finals, tries to concentrate but finds his attention repeatedly diverted by Sarah's loud commentary. The library, usually a haven of quiet study, becomes a stage for a growing conflict. Sophie, another tech enthusiast, is intrigued by the device but disapproves of Sarah's disregard for library etiquette. The tension comes to a head as Ben confronts Sarah, his frustration boiling over. Words are exchanged, each more heated than the last. Sarah, caught off guard, faces a choice: to defend her right to explore technology or to acknowledge the disruption she's caused. The library holds its breath, waiting for her response, as the situation teeters on the edge of a dramatic climax.";
-
-                inp = "-h -hd -5 Meric Cattanay Proposes to Paint Griaule: This scene takes place in the lush, fertile valley of Teocinte, under the shadow of the massive dragon Griaule. Meric, a lanky young man with a shock of black hair, dressed in peasant's clothes, stands before the skeptical city fathers of Teocinte, gesturing passionately. The city fathers, a group of stern, sour-faced men, sit at a long table with a backdrop of a soot-smudged wall, symbolizing their shared burdens. Meric's eyes are wide with fervor as he unveils his audacious plan to paint the dragon as a means to poison and eventually kill it. The room is filled with tension, intrigue, and the weight of centuries of history between the people and the dragon.";
-                //inp = "-h -hd -4 a cat in a hat.";
-                
+                inp = "A visual to accompany the text: 'Three can keep a secret, if two of them are dead.' {GPTLocations} {GPTStyles}  -r -hd -h -10";
                 return inp;
             }
         }
@@ -133,9 +125,16 @@ namespace Dalle3
 
             var numre = new Regex(@"\-([\d]{1,2})");
             var count = 0;
+            var usingRawPrompt = "";
             foreach (string s in args)
             {
                 if (string.IsNullOrEmpty(s)) { continue; }
+                if (s == "/help" || s == "/h" || s == "/?" || s == "-help" || s == "--help" || s == "-ayuda" || s == "--h")
+                {
+                    Console.WriteLine($"You triggered the help display by typing: {s}, so printing it and quitting.");
+                    Usage();
+                    Environment.Exit(0);
+                }
                 if (count == 0)
                 {
                     var t = numre.Match(s);
@@ -156,12 +155,7 @@ namespace Dalle3
                     optionsModel.Size = ImageSize._1792x1024;
                     continue;
                 }
-                if (s == "/help" || s == "/h" || s == "/?" || s == "-help" || s == "--help" || s == "-ayuda" || s == "--h")
-                {
-                    Console.WriteLine($"You triggered the help display by typing: {s}, so printing it and quitting.");
-                    Usage();
-                    Environment.Exit(0);
-                }
+
                 if (s == "-noann")
                 {
                     optionsModel.IncludeAnnotatedImageOutput = false;
@@ -181,14 +175,14 @@ namespace Dalle3
                     continue;
                 }
 
-                if (s[0] != '-' && s[0] == '-') //fallthrough, although for sanity we should at least allow bare - since thats probably just part of the prompt.
+                if (s.Length > 1 && s[0] == '-' && s[1] != '-') //fallthrough, although for sanity we should at least allow bare - since thats probably just part of the prompt.
                 {
                     Statics.Logger.Log($"Unknown option: {s}");
                     Usage();
                     return null;
                 }
 
-                optionsModel.RawPrompt += " " + s;
+                usingRawPrompt += " " + s;
             }
 
             if (!optionsModel.IncludeNormalImageOutput && !optionsModel.IncludeAnnotatedImageOutput)
@@ -197,54 +191,38 @@ namespace Dalle3
                 Usage();
                 System.Environment.Exit(0);
             }
-            optionsModel.RawPrompt = optionsModel.RawPrompt.Trim();
 
-            if (string.IsNullOrEmpty(optionsModel.RawPrompt)) { return null; }
+            //optionsModel.RawPrompt = optionsModel.RawPrompt.Trim();
 
-            var worked = false;
-            var blowups = Blowups.GetBlowups();
-            while (true)
-            {
-                worked = false;
-                foreach (var b in blowups)
-                {
-                    var key = b.Short;
-                    if (optionsModel.RawPrompt.IndexOf(key) >= 0)
-                    {
-                        optionsModel.RawPrompt = Statics.ReplaceOnce(optionsModel.RawPrompt, key, b.Long);
-                        Statics.Logger.Log($"Blew up prompt to: {optionsModel.RawPrompt}");
-                        worked = true;
-                    }
-                }
-                if (!worked) { break; }
-            }
+            //okay, now we have a raw prompt with sections like <text> {text which should be made into an alias}, etc.
 
-            //randomThing
+            //okay, I don't want to use a syntax parser and all that here. I'll just use some magical stuff
+            //to switch this out in a safe section where at the end I"m guaranteed to have all significant "segments".
+            //a segment now is either "{...}" (a permuatation sectrion) or "...".  If later
+            //I want to add a powerset section such as [], I can use some magic to do that. The point here is that:
+            //the first char of the chunk is the pointer for who should parse it into an IPromptSection, and we remove the last char.
 
-            optionsModel.EffectivePrompts = PermutationExpander.ExpandCurlyItems(optionsModel.RawPrompt);
-            if (optionsModel.Random)
-            {
-                Statics.Shuffle(optionsModel.EffectivePrompts);
-            }
+            optionsModel.PromptSections = Parser.ParseInput(usingRawPrompt);
             return optionsModel;
         }
 
-        public static string PromptToFilename(ImageGenerationRequest req)
-        {
+        public static string PromptToDestFpWithReservation(ImageGenerationRequest req, string humanReadable, int taskNumber)
+        {            
             var now = DateTime.Now;
-            var usePrompt = req.Prompt.Replace("AAA", "");
-            usePrompt = Regex.Replace(usePrompt, "[^a-zA-Z0-9]", "_");
+            string usePrompt = Regex.Replace(humanReadable, "[^a-zA-Z0-9]", "_");
             while (usePrompt.Contains("__"))
             {
                 usePrompt = usePrompt.Replace("__", "_");
             }
 
-            if (usePrompt.Length > 130)
+            if (usePrompt.Length > 180)
             {
-                usePrompt = usePrompt.Substring(0, 130);
+                usePrompt = usePrompt.Substring(0, 60);
             }
-            var align = "";
-            //var w = new ImageSize("1792x1024");
+
+            usePrompt = usePrompt + "_" + taskNumber.ToString();
+            string align;
+
             var dumbSize = req.Size.ToString();
             switch (dumbSize)
             {
@@ -262,10 +240,60 @@ namespace Dalle3
                     break;
             }
             var useQuality = req.Quality ?? "standard";
-            var outfn = $"{usePrompt.Trim().TrimEnd('_')}-{now.Year}{now.Month:00}{now.Day:00}-{useQuality}-{align}.png";
-            return outfn;
+            var outFn = $"{usePrompt.Trim().TrimEnd('_')}-{now.Year}{now.Month:00}{now.Day:00}-{useQuality}-{align}.png";
+
+            var tries = 0;
+            while (true)
+            {
+                var fp = $"d:/proj/dalle3/output/{outFn.Replace(".png",$"_{tries}.png")}";
+                if (!System.IO.File.Exists(fp))
+                {
+                    //touch a file there.
+                    System.IO.File.Create(fp).Close();
+                    return fp;
+                }
+                tries++;
+                if (tries > 1000)
+                {
+                    throw new Exception("Not able to find a place to store the file.");
+                }
+            }
         }
 
+        public static IEnumerable<InternalTextSection> IteratePowerSet(IEnumerable<InternalTextSection> items, int minElements = 0, int maxElements = int.MaxValue, int skip = 0)
+        {
+            int lastIndex = 1 << items.Count();
+
+            for (int index = skip; index < lastIndex; index++)
+            {
+                var subset = new List<InternalTextSection>();
+                for (int ii = 0; ii < items.Count(); ii++)
+                {
+                    if ((index & (1 << ii)) != 0)
+                    {
+                        subset.Add(items.Skip(ii).First());
+                    }
+                }
+                if (subset.Count < minElements || subset.Count > maxElements)
+                {
+                    continue;
+                }
+
+                var newInternal = new InternalTextSection(string.Join(" ", subset.Select(el => el.L)), string.Join(" ", subset.Select(el => el.L)), true, null);
+                yield return newInternal;
+            }
+        }
+
+        public static IEnumerable<InternalTextSection> PickRandomPowersetValue(IEnumerable<InternalTextSection> items)
+        {
+            var num = Random.Next(0, items.Count());
+            var el = IteratePowerSet(items, 0, 0, num).First();
+            yield return el;
+        }
+
+        /// <summary>
+        /// You survive... for now.
+        /// </summary>
         public static string ReplaceOnce(string input, string target, string part)
         {
             var ii = input.IndexOf(target);
@@ -277,6 +305,18 @@ namespace Dalle3
             res += part;
             res += input.Substring(ii + target.Length, input.Length - ii - target.Length);
             return res;
+        }
+
+        public static void UpdateWithFilterResult(IEnumerable<InternalTextSection> sections, TextChoiceResultEnum el)
+        {
+            foreach (var section in sections)
+            {
+                if (section.Parent == null)
+                {
+                    continue;
+                }
+                section.Parent.ReceiveChoiceResult(section.S, el); ;
+            }
         }
     }
 }
