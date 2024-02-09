@@ -193,7 +193,6 @@ namespace Dalle3
                                 }
                                 finally
                                 {
-                                    //Console.WriteLine("Finally block reached.");
                                     throttler.Release();
                                 }
                             }

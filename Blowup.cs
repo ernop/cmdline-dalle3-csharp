@@ -2,6 +2,7 @@
 {
     public class Blowup
     {
+
         public string Short { get; set; }
         public string Long { get; set; }
         public Blowup(string s, string l)
@@ -17,6 +18,10 @@
                 l = l + "}";
             }
             Long = l;
+        }
+        public override string ToString()
+        {
+            return Short;
         }
     }
 }

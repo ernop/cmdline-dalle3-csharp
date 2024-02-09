@@ -123,7 +123,7 @@ namespace Dalle3
                 "Ancient Rome at its Zenith under Emperor Trajan - A cosmopolitan empire at its peak," +
                 "The Ming Dynasty's Forbidden City in 15th Century Beijing - The imperial palace complex at the heart of China");
 
-            var awesomes = new Blowup("{AwesomeStyles}", 
+            var awesomes = new Blowup("{AwesomeStyles}",
                 "Dungeons and Dragons, Pathfinder, Lamentations of the Flame Princess, " +
                 "Dungeon Crawl Classics, Fantasy AGE, Warhammer Fantasy, " +
                 "Palladium Fantasy, G.U.R.P.S, Basic Fantasy, Low Fantasy Gaming, " +
@@ -134,6 +134,37 @@ namespace Dalle3
                 "Fighting Fantasy, Tunnels and Trolls, Monsters Monsters, TTRPG, " +
                 "EZD6, Index Card RPG, Dungeons of Drakkenheim"
             );
+
+            var backgrounds = new Blowup("{GPTBackgrounds}",
+                "a barren grotto, a jungle clearing, a forest glen, a cliff temple, a riverine valley, a whitewater rapids, " +
+                "a boulder field, a portrait factory, a wood mill, a fantasy quarry, a crowded swimming pool, " +
+                "maximum security bank vault, magicians tower of artifacts, archaelogocial site in a deep pit in a modern italian city, " +
+                "dragons lair, prison, infinite scale furtniture factory, parrot heaven, garden of eden, morocco, bazaar, pinnacle, " +
+                "outdoor boulder field, gigantic crevasse, ice floe, volcano top, lava flow, moonscape, alien planet, mega tower, " +
+                "battle mech control panel, battle mech warfield, war game, world made of cubes, hexagonal scale wall, gigantic plane, " +
+                "minimalistic plane of air, civilization in a cloud city, a metallurgical factory, an elemental plane of fire, a flooded castle, " +
+                "a mansion, a polar bear igloo, a ceramic vase, a wooden vessel, a gigantic redwood tree top, a treehouse, a romantic barn, " +
+                "a warm greenhouse in a cold nation, a hothouse orchid farm beneath an icy sky, an overcast sky green lush ireland," +
+                " a castle tower with magical gems, a jeweled mine, a wall made of jewelry, a jewelry store, a hidden cache of gold coins, " +
+                "a gigantic dice, a continent-sized gear, a tube of transportation, a wormhole, a gas giant, a chonky cat spaceship, a cream factory, " +
+                "a sound-proofed room, on top of a gigantic lit candle, a realm of infinite mirrors, a field covered with gigantic frosted blocks of glass, " +
+                "sea glass museum, a bubble dome on an alien planet, inside a snowglobe, a dome of shattered glass, a crystal cavern,"+
+                "a sunken pirate cove, an enchanted mushroom forest, a sky-high monastery, a serpentine river gorge, behind a thunderous waterfall," +
+                " an ancient ruins overgrown with vines, an alchemist's laboratory full of mystical brews, a hidden valley of flowers," +
+                " an obsidian castle amidst fiery lava lakes, an underground city illuminated by glow worms, a towering ice castle," +
+                " a secret garden with enchanted creatures, a Sphinx's sandstone library, a clockwork city running on steam and gears, " +
+                "a subterranean tunnel network, floating islands with waterfalls pouring into the void, a deep sea Atlantis with bioluminescent life," +
+                " a nebula cloud in outer space as a living habitat, an abandoned theme park reclaimed by nature, an infinite library with magical tomes, " +
+                "a dinosaur sanctuary in a hidden valley, a giant's causeway of mythical proportions, an astral plane with floating celestial bodies, " +
+                "a cybernetic hive city, a haunted Victorian manor with secret passages, the Grand Canyon filled with fog and mysteries, " +
+                "an ethereal Northern Lights village, a coral reef city under the sea, a phoenix nest on a volcanic island, " +
+                "a time-frozen battlefield with historical relics, a futuristic agropolis with vertical farms, a rainbow bridge connecting floating castles, " +
+                "an Arctic research station with aurora observatory, a crystal iceberg labyrinth, a bamboo forest with hidden temples, " +
+                "a starship junkyard on a deserted planet, an enormous anthill metropolis, a witches' market with magical goods, " +
+                "a valley of geysers and hot springs, an infinite staircase to the stars, an underwater bubble city, a solar observatory on a remote peak, " +
+                "a planetary ring habitat with artificial gravity, an electric storm planet with constant lightning, " +
+                "a Titan's chessboard - a landscape of massive chess pieces, a ghost ship harbor, a giant's garden with enormous flora and fauna, " +
+                "an eldritch dimension of unfathomable geometry, an oasis in a glass dome on a desert planet ");
 
             var origins = new Blowup("{GPTOrigins}",
                 "Abkhazian Abkhazia,Acehnese Indonesian,Afghan,Ainu Indigenous people of Japan," +
@@ -200,11 +231,9 @@ namespace Dalle3
                 "Zen ink wash painting, " +
                 "Water-drip on paper image," +
                 "Post-impressionist scene with vivid brushstrokes, " +
-                //"modernist sculpture, " +
                 "retro-futuristic illustration, " +
                 "vaporwave aesthetic background image," +
                 "sultry Art Deco poster, " +
-                //"An introspective Surrealist painting, " +
                 "Vibrant Fauvist landscape," +
                 "Meticulous pointillist piece with tiny distinct dots, " +
                 "Byzantine mosaic featuring rich golden tesserae, " +
@@ -281,6 +310,7 @@ namespace Dalle3
             
             var blowups = new List<Blowup>() {
                     awesomes,
+                    backgrounds, 
                     gptStyles,
                     locations,
                     origins,
