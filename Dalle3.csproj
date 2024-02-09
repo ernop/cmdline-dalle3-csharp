@@ -67,6 +67,7 @@
     <Compile Include="Annotate.cs" />
     <Compile Include="Blowup.cs" />
     <Compile Include="Blowups.cs" />
+    <Compile Include="Example.cs" />
     <Compile Include="Expando.cs" />
     <Compile Include="Log.cs" />
     <Compile Include="OptionsModel.cs" />

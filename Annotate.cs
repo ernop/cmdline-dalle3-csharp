@@ -129,7 +129,7 @@ public class Annotator
 
         graphics.Save();
         im.Save(destFp);
-        Logger.Log($"Successfully saved new fp: {destFp}");
+        //Logger.Log($"Saved annotated version. fp: {destFp}");
         return destFp;
     }
 }

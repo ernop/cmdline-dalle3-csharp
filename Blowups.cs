@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Dalle3
@@ -14,6 +15,22 @@ namespace Dalle3
     {
         public static List<Blowup> GetBlowups()
         {
+            var landscapes = new Blowup("{GPTLandscapes}",
+                "A barren plains ridged with amazing landforms," +
+                "An alienly curving series of arcs within a natural zone"
+                );
+
+            ///okay this one is awesome.
+            var compositionTypes = new Blowup("{GPTCompositions}",
+                "low horizon composition, high horizon composition, minimalist sky composition, " +
+                "rule of thirds with extreme offset composition, negative space composition, " +
+                "leading lines composition, symmetrical composition, frame within a frame composition, " +
+                "diagonal composition, golden ratio, spiral composition, shallow depth of field composition, " +
+                "textured foreground composition, vibrant color contrast composition, silhouette composition, " +
+                "dynamic tension composition, abstract pattern composition, reflective symmetry composition, " +
+                "juxtaposition composition, balanced elements composition"
+                );
+
             var locations = new Blowup("{GPTLocations}",
                 "The Ruins of an Ancient City among the crumbling walls lost relics and symbols and abandoned empty streets of a once-great metropolis, " +
                 "A Floating City in the Clouds with aerial platforms and suspended walkways that provide a unique three-dimensional space, " +
@@ -119,8 +136,39 @@ namespace Dalle3
             );
 
             var origins = new Blowup("{GPTOrigins}",
-                "Abkhazian Abkhazia,Acehnese Indonesian,Afghan,Ainu Indigenous people of Japan,Ainu,Akan Ghana,Albanian,Algerian,Ambonese Indonesian,Amhara,Amsterdam Netherlands,Andalusian Spain,Andorran,Aragonese Spain,Armenian,Ashanti Ghana,Ashkenazi Jewish,Assyrian,Asturian Spain,Athens Greece,Auckland New Zealand,Austrian,Avar,Azerbaijani,Bali Indonesia,Balinese Indonesian,Bamileke Cameroon,Bangkok Thailand,Bangladeshi,Banjar Indonesian,Barcelona Spain,Basajaun Basque mythology,Bashkir,Basque Basque Country,Basque,Batak Indonesian,Beijinger,Beirut Lebanon,Belgian,Bengali,Berber,Berlin Germany,Bhutanese,Bosnian Bosnia and Herzegovina,Breton,British,Bruneian,Budapest Hungary,Buenos Aires Argentina,Bugis Indonesian,Bulgarian,Burmese Myanmar,Burmese,Buryat,Cambodian,Cantabrian Spain,Cape Town South Africa,Castilian Spain,Catalan Catalonia,Catalan,Cebuano Filipino,Chamorro Guam,Chechen Russia,Chechen,China,Chinese,Chuvash,Circassian,Cook Islander,Copenhagen Denmark,Corsican,Croatian,Cypriot Cyprus,Czech,Dagestani Russia,Dagomba Ghana,Dai Chinese,Dayak Indonesian ,Dubai UAE,Dungan,Dutch Netherlands,Edinburgh Scotland,Egyptian,Emirati UAE,English,Ewe Ghana,Fang Central Africa\r\nFaroese Faroe Islands,Fijian,Filipino,France,France,French,Frisian,Fulani West Africa,Futunan Wallis and Futuna,Ga Ghana,Galician,Gallego Spain,Georgia,Georgian,German,Gibraltarian,Greek Cypriot Cyprus,Greek,Greenlandic Inuit,Gujarati,Hakka Chinese,Hakka Chinese,Han Chinese,Hani Chinese,Hausa West Africa,Havana Cuba,Hmong,Hui Chinese Muslim,Hungarian,Igbo,Ilocano Filipino,Indian,Indonesian,Ingush,Iranian,Iraqi,Irish,Israeli,Istanbul Turkey,Italian,Italy,Italy,Italy,Japanese,Javanese,Jordanian,Kabardian,Kabyle Algeria,Kalmyk,Kannada,Karelian,Kazakh Kazakhstan,Kazakh,Khakas,Kikuyu,Kirghiz,Kiribatian,Korean,Kosovar Kosovo,Kumyk,Kurdish,Kuwaiti,Kyrgyz Kyrgyzstan,Ladino,Laotian,Las Vegas USA,Lebanese,Lezgian,Li Chinese,Libyan,Liechtensteiner,Lisbon Portugal,London UK,Los Angeles USA,Luxembourger,Lyonnais Lyon,Maasai,Macedonian,Madrid Spain,Madurese Indonesian,Makassarese Indonesian,Malagasy Madagascar,Malayali,Malaysian,Maldivian,Maltese,Manchu Northeast China,Manchu,Mandinka West Africa,Maori New Zealand,Marathi,Mari,Marrakech Morocco,Marseillais Marseille,Marshallese,Melbourne Australia,Mexico City Mexico,Miami USA,Miao Chinese,Micronesian,Milan Italy,Min Chinese,Minangkabau Indonesian,Mizrahi Jewish,Moldovan,Mongolian,Mongolian,Montenegrin,Montreal Canada,Mordvin,Moroccan,Moscow Russia,Mumbai India,Murcian Spain,Nauruan,Navarrese Spain,Neapolitan Naples,Nepalese,New Orleans USA,New York City USA,Ni-Vanuatu Vanuatu,Niuean,North Korean,Northern Irish,Nubian,Occitan,Okinawan Japan,Omani,Oriya,Oromo,Ossetian North and South Ossetia,Ossetian,Pakistani,Palauan,Palestinian,Papua New Guinean,Paris France,Parisian France,Pashtun,Portuguese,Prague Czech Republic,Punjabi,Qatari,Riffian Rif, Morocco,Rio de Janeiro Brazil,Romani,Romanian,Rome Italy,Sami Northern Europe,Sami,Samoan,San Diego USA,San Francisco USA,Sardinian,Sasak Indonesian,Saudi Arabian,Scottish,Seoul South Korea,Sephardi Jewish,Serbian,Shanghainese,Siberian Russia,Sichuanese,Sicilian Sicily,Sicilian,Sindhi,Singaporean,Slovak,Slovenian,Solomon Islander,Somali,South Korean,Spain,Spain/France,Spaniard,Sri Lankan,Stockholm Sweden,Sundanese Indonesian,Swazi Eswatini,Swiss,Sydney Australia,Syrian,Sámi,Tagalog Filipino,Tahitian French Polynesia,Taiwanese,Tajik Tajikistan,Tamil,Tatar Russia,Tatar,Tel Aviv Israel,Telugu,Thai,Tibetan Tibet,Tibetan,Tigrayan,Timorese East Timor,Tokelauan,Tokyo Japan,Tongan,Toraja Indonesian,Tuareg Sahara,Tuareg,Tujia Chinese,Tunisian,Turkish Cypriot Northern Cyprus,Turkish,Turkmen Turkmenistan,Tuvaluan,Tuvinian,Udmurt,Uighur Xinjiang,Uyghur,Uzbek Uzbekistan,Valencian Spain,Vancouver Canada,Venetian Venice,Venice Italy,Vietnamese,Vietnamese,Wallisian Wallis and Futuna,Walloon,Warsaw Poland,Welsh,Wolof Senegal,Wu Chinese,Xhosa,Yakut,Yemeni,Yoruba,Zhuang Chinese,Zulu");
-
+                "Abkhazian Abkhazia,Acehnese Indonesian,Afghan,Ainu Indigenous people of Japan," +
+                "Ainu,Akan Ghana,Albanian,Algerian,Ambonese Indonesian,Amhara,Amsterdam Netherlands," +
+                "Andalusian Spain,Andorran,Aragonese Spain,Armenian,Ashanti Ghana,Ashkenazi Jewish," +
+                "Assyrian,Asturian Spain,Athens Greece,Auckland New Zealand,Austrian,Avar,Azerbaijani," +
+                "Bali Indonesia,Balinese Indonesian,Bamileke Cameroon,Bangkok Thailand,Bangladeshi,Banjar Indonesian," +
+                "Barcelona Spain,Basajaun Basque mythology,Bashkir,Basque Basque Country,Basque,Batak Indonesian,Beijinger," +
+                "Beirut Lebanon,Belgian,Bengali,Berber,Berlin Germany,Bhutanese,Bosnian Bosnia and Herzegovina,Breton,British," +
+                "Bruneian,Budapest Hungary,Buenos Aires Argentina,Bugis Indonesian,Bulgarian,Burmese Myanmar,Burmese,Buryat,Cambodian," +
+                "Cantabrian Spain,Cape Town South Africa,Castilian Spain,Catalan Catalonia,Catalan,Cebuano Filipino,Chamorro Guam,Chechen Russia," +
+                "Chechen,China,Chinese,Chuvash,Circassian,Cook Islander,Copenhagen Denmark,Corsican,Croatian,Cypriot Cyprus,Czech,Dagestani Russia," +
+                "Dagomba Ghana,Dai Chinese,Dayak Indonesian ,Dubai UAE,Dungan,Dutch Netherlands,Edinburgh Scotland,Egyptian,Emirati UAE,English,Ewe Ghana," +
+                "Fang Central Africa, Faroese Faroe Islands,Fijian,Filipino,France,France,French,Frisian,Fulani West Africa,Futunan Wallis and Futuna," +
+                "Ga Ghana,Galician,Gallego Spain,Georgia,Georgian,German,Gibraltarian,Greek Cypriot Cyprus,Greek,Greenlandic Inuit,Gujarati," +
+                "Hakka Chinese,Hakka Chinese,Han Chinese,Hani Chinese,Hausa West Africa,Havana Cuba,Hmong,Hui Chinese Muslim,Hungarian,Igbo," +
+                "Ilocano Filipino,Indian,Indonesian,Ingush,Iranian,Iraqi,Irish,Israeli,Istanbul Turkey,Italian,Italy,Italy,Italy,Japanese," +
+                "Javanese,Jordanian,Kabardian,Kabyle Algeria,Kalmyk,Kannada,Karelian,Kazakh Kazakhstan,Kazakh,Khakas,Kikuyu,Kirghiz,Kiribatian," +
+                "Korean,Kosovar Kosovo,Kumyk,Kurdish,Kuwaiti,Kyrgyz Kyrgyzstan,Ladino,Laotian,Las Vegas USA,Lebanese,Lezgian,Li Chinese,Libyan," +
+                "Liechtensteiner,Lisbon Portugal,London UK,Los Angeles USA,Luxembourger,Lyonnais Lyon,Maasai,Macedonian,Madrid Spain,Madurese Indonesian," +
+                "Makassarese Indonesian,Malagasy Madagascar,Malayali,Malaysian,Maldivian,Maltese,Manchu Northeast China,Manchu,Mandinka West Africa," +
+                "Maori New Zealand,Marathi,Mari,Marrakech Morocco,Marseillais Marseille,Marshallese,Melbourne Australia,Mexico City Mexico,Miami USA," +
+                "Miao Chinese,Micronesian,Milan Italy,Min Chinese,Minangkabau Indonesian,Mizrahi Jewish,Moldovan,Mongolian,Mongolian,Montenegrin," +
+                "Montreal Canada,Mordvin,Moroccan,Moscow Russia,Mumbai India,Murcian Spain,Nauruan,Navarrese Spain,Neapolitan Naples,Nepalese,New Orleans USA," +
+                "New York City USA,Ni-Vanuatu Vanuatu,Niuean,North Korean,Northern Irish,Nubian,Occitan,Okinawan Japan,Omani,Oriya,Oromo,Ossetian North and South Ossetia," +
+                "Ossetian,Pakistani,Palauan,Palestinian,Papua New Guinean,Paris France,Parisian France,Pashtun,Portuguese,Prague Czech Republic,Punjabi," +
+                "Qatari,Riffian Rif, Morocco,Rio de Janeiro Brazil,Romani,Romanian,Rome Italy,Sami Northern Europe,Sami,Samoan,San Diego USA,San Francisco USA," +
+                "Sardinian,Sasak Indonesian,Saudi Arabian,Scottish,Seoul South Korea,Sephardi Jewish,Serbian,Shanghainese,Siberian Russia,Sichuanese,Sicilian Sicily," +
+                "Sicilian,Sindhi,Singaporean,Slovak,Slovenian,Solomon Islander,Somali,South Korean,Spain,Spain/France,Spaniard,Sri Lankan,Stockholm Sweden,Sundanese Indonesian," +
+                "Swazi Eswatini,Swiss,Sydney Australia,Syrian,Sámi,Tagalog Filipino,Tahitian French Polynesia,Taiwanese,Tajik Tajikistan,Tamil,Tatar Russia,Tatar,Tel Aviv Israel," +
+                "Telugu,Thai,Tibetan Tibet,Tibetan,Tigrayan,Timorese East Timor,Tokelauan,Tokyo Japan,Tongan,Toraja Indonesian,Tuareg Sahara,Tuareg,Tujia Chinese,Tunisian," +
+                "Turkish Cypriot Northern Cyprus,Turkish,Turkmen Turkmenistan,Tuvaluan,Tuvinian,Udmurt,Uighur Xinjiang,Uyghur,Uzbek Uzbekistan,Valencian Spain," +
+                "Vancouver Canada,Venetian Venice,Venice Italy,Vietnamese,Vietnamese,Wallisian Wallis and Futuna,Walloon,Warsaw Poland,Welsh,Wolof Senegal," +
+                "Wu Chinese,Xhosa,Yakut,Yemeni,Yoruba,Zhuang Chinese,Zulu");
+            
             var gptStyles = new Blowup("{GPTStyles}", 
                 "A serene Impressionist painting, " +
                 "A stark minimalist composition, " +
@@ -152,19 +200,19 @@ namespace Dalle3
                 "Zen ink wash painting, " +
                 "Water-drip on paper image," +
                 "Post-impressionist scene with vivid brushstrokes, " +
-                "modernist sculpture, " +
+                //"modernist sculpture, " +
                 "retro-futuristic illustration, " +
-                "vaporwave aesthetic scene," +
+                "vaporwave aesthetic background image," +
                 "sultry Art Deco poster, " +
                 //"An introspective Surrealist painting, " +
-                "Vibrant Fauvist landscape with wild bold colors," +
+                "Vibrant Fauvist landscape," +
                 "Meticulous pointillist piece with tiny distinct dots, " +
                 "Byzantine mosaic featuring rich golden tesserae, " +
                 "Pre-Raphaelite oil painting with romantic themes, " +
                 "Dada assemblage challenging conventional aesthetics," +
                 "tranquil Thomas Cole-inspired Hudson River School landscape, " +
                 "Constructivist design with industrial motifs," +
-                "Bold Futurist painting capturing movement and speed, " +
+                "Bold Futurist painting capturing movement and speed" +
                 "}");
 
             var excitingLocations = new Blowup("{ExcitingLocations}",
@@ -222,7 +270,14 @@ namespace Dalle3
                 "{Supernovae, Black Holes, Auroras (Northern and Southern Lights), Comets, Solar Eclipses, Lunar Eclipses, Neutron Stars, Galactic Collisions, Pulsars, Planetary Transits}");
             
             var asianLocations = new Blowup("{GPTAsiaLocations}", 
-                "a rice field in summer with water filled and reflecting the infinite sky along narrow concrete paths, suburban tokyo, an industrial small town in the mountainous regions of honshu in central japan, yokohama in japan in a little izakaya as a server, a tokyo gigantic university library, the morning after in akahabara at 9am as people get back to work, a gritty overpass osaka in, medieval nara inside an entertainment venue for artisans down on theri luck, beijing at the important central city, the bund in shanghai, an electronics market in guangdong, chunking hotel in hong kong the scene of many hijinx, a secret military bunker and training school under seoul, the government\'s prepared government in exile center in pusan, the south korean countryside near the ocean, the island of jeju which is famous as a place for newlyweds to spend time and fall deeper in love");
+                "a rice field in summer with water filled and reflecting the infinite sky along narrow concrete paths, " +
+                "suburban tokyo, an industrial small town in the mountainous regions of honshu in central japan, " +
+                "yokohama in japan in a little izakaya as a server, a tokyo gigantic university library, " +
+                "the morning after in akahabara at 9am as people get back to work, a gritty overpass osaka in, " +
+                "medieval nara inside an entertainment venue for artisans down on theri luck, beijing at the important central city, " +
+                "the bund in shanghai, an electronics market in guangdong, chunking hotel in hong kong the scene of many hijinx, " +
+                "a secret military bunker and training school under seoul, the government\'s prepared government in exile center in pusan, " +
+                "the south korean countryside near the ocean, the island of jeju which is famous as a place for newlyweds to spend time and fall deeper in love");
             
             var blowups = new List<Blowup>() {
                     awesomes,
@@ -233,6 +288,8 @@ namespace Dalle3
                     shapes,
                     skies,
                     asianLocations,
+                    landscapes,
+                    compositionTypes,
                 };
             return blowups;
         }
