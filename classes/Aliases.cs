@@ -15,13 +15,32 @@ namespace Dalle3
 
         public static List<Alias> GetAliases()
         {
-            var landscapes = new Alias("GPTLandscapes",
-                "A barren plains ridged with amazing landforms, An alienly curving series of arcs within a natural zone");
+            var protagonists = new Alias("GPTProtagonists", "lightning, lava, lasers, dinosaurs, volcanos, magma, explosions, constellations, " +
+                "waterfalls, melting ice walls, numinosity, cumulonimbus cloud banks, thunderstorms, ball lightning, will'o'the wisps, " +
+                "disappearing horsemen, native wild horses, " +
+                "cliffs, steep striped pyramids, a gigantic zero, a zeppelin, a jeep, " +
+                "far future realistic aliens, ocean vessels, kayaks, ice floes, icebergs, " +
+                "natural disasters, tornados, waterspouts, black dwarves, dwarf horses, " +
+                "venus fly traps, carnivorous plants, ice cream, cybernetics, nanotech, fusion power, " +
+                "holograms, antimatter, spaceships, chonky cats, yeti, loch ness monster, crypids, cryptocurrency, gold bars, barrels and crates, " +
+                "alien relics, the sea elves, paladins, d&d artifacts, +5 greatswords, ancient dragons,  orchids, greenhouses, galactic empires, ringworlds, dyson spheres, " +
+                "singularities, black holes, solar panels, teslas, drone haircut matchines, geodes, fulgurites, glow worms, sandworms, " +
+                "hexapods, ant farms, butterflies, cats, shark teeth, sharks, moon rocks, stalactites, missiles, cluster munitions, bullets, fireballs, electricity, " +
+                "DNA helices, princesses, knights,  " +
+                "the word 'ROBLOX', the alphabet, a mega-kanji, kaiju, centipedes, alien kaiju,lich, "+
+                "tsunamis,  beholder monsters, manatees, shattered spheres,  double rainbows, triple rainbows");
+
+            var forts = new Alias("GPTForts",
+                "zero-point energy, dark matter, plasma,monumental architecture, fort knox, the white house, the louvre, the golden temple of amritsar, the taj mahal, " +
+                "brutalist architecture, giant curtain walls, arrow slits, a wizard's tower,supernovae, quasars, parallel universes, monumental glaciers, sheer cliffs, crevasses, " +
+                "infinite stairways, oil rigs, a castle, moats, megaliths, arcologies,Hokkaido, " +
+                "red square, mordor, narnia, the white witch, the washington monument, milky way galaxy, " +
+                "galaxies, andromeda");
 
             ///okay this one is awesome.
             var compositionTypes = new Alias("GPTCompositions",
-                "low horizon composition, high horizon composition, minimalist sky composition, " +
-                "rule of thirds with extreme offset composition, negative space composition, " +
+                "low horizon composition, high horizon composition, gradient following exploratory composition, minimalist sky composition, " +
+                "rule of thirds composition with extreme offset, negative space composition, " +
                 "leading lines composition, symmetrical composition, frame within a frame composition, " +
                 "diagonal composition, golden ratio geometrical compsition, spiral twirling composition, shallow depth of field extreme bokeh composition, " +
                 "textured foreground composition, vibrant color contrast composition, silhouette composition, " +
@@ -120,7 +139,7 @@ namespace Dalle3
                 "Ancient Rome at its Zenith under Emperor Trajan - A cosmopolitan empire at its peak," +
                 "The Ming Dynasty's Forbidden City in 15th Century Beijing - The imperial palace complex at the heart of China");
 
-            var awesomes = new Alias("AwesomeStyles",
+            var rpgstyles = new Alias("RPGStyles",
                 "Dungeons and Dragons, Pathfinder, Lamentations of the Flame Princess, " +
                 "Dungeon Crawl Classics, Fantasy AGE, Warhammer Fantasy, " +
                 "Palladium Fantasy, G.U.R.P.S, Basic Fantasy, Low Fantasy Gaming, " +
@@ -306,7 +325,8 @@ namespace Dalle3
                 "the island of jeju which is famous as a place for newlyweds to spend time and fall deeper in love");
 
             var aliases = new List<Alias>() {
-                    awesomes,
+                    rpgstyles,
+                    protagonists,
                     backgrounds,
                     gptStyles,
                     locations,
@@ -315,7 +335,7 @@ namespace Dalle3
                     shapes,
                     skies,
                     asianLocations,
-                    landscapes,
+                    forts,
                     compositionTypes,
 
                     ///These are for making set decks, and more function as simple terms to refer to variation beyond which we probably don't really need to see.

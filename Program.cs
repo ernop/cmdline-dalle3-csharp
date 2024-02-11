@@ -84,12 +84,14 @@ namespace Dalle3
                 //so fix it here for tracking.
                 req.Quality = quality ?? "standard";
                 //var usingSubPrompt = Substitutions.SubstituteExpansionsIntoPrompt(subPrompt);
-                req.Prompt = string.Join(" ", textSections.Select(el => el.L));
+                var textx = textSections.Select(el => el.L);
+
+                req.Prompt = string.Join(" ", textx).Replace(" ,",",");
                 req.Size = optionsModel.Size;
                 var humanReadable = string.Join("_", textSections.Select(el => el.GetValueForHumanConsumption()));
 
                 var l = req.Prompt.Length;
-                var displayedPromptLength = 200;
+                var displayedPromptLength = 100;
                 Statics.Logger.Log($"Sending to imagemaker:\t\"{req.Prompt.Substring(0, Math.Min(l, displayedPromptLength))}\"");
 
                 //during asyncification: actually, I was already doing things wrong, probably. This 
