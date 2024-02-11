@@ -50,7 +50,8 @@ namespace Dalle3
                 inp = "“Tiger, one day you will come to a fork in the road,” he said. “And you’re going to have to make a decision about which direction you want to go.” He raised his hand and pointed. “If you go that way you can be somebody. You will have to make compromises and you will have to turn your back on your friends. But you will be a member of the club and you will get promoted and you will get good assignments.” Then Boyd raised his other hand and pointed another direction. “Or you can go that way and you can do something—something for your country and for your Air Force and for yourself. If you decide you want to do something, you may not get promoted and you may not get the good assignments and you certainly will not be a favorite of your superiors. But you won’t have to compromise yourself. You will be true to your friends and to yourself. And your work might make a difference.” He paused and stared into Leopold’s eyes and heart. “To be somebody or to do something. In life there is often a roll call. That’s when you will have to make a decision. To be or to do? Which way will you go?” " +
                     "{GPTLocations}" +
                     "{GPTStyles}  -r";
-                inp = "{GPTProtagonists}, {GPTProtagonists}, and {GPTProtagonists} team up to fight {GPTForts}. -h -hd -20";
+                inp = "{GPTProtagonists}, {GPTProtagonists}, and {GPTProtagonists} on the left team up to fight {GPTForts} which is on the right in the distance. -h -hd -20";
+                inp = "-h -hd -30 a small golden {GPTProtagonists}, a silver {GPTProtagonists}, and a stone {GPTProtagonists} are resting on a windowsill in {GPTLocations} as a beautiful girl prepares to go out.";
                 return inp;
             }
         }
@@ -169,7 +170,7 @@ namespace Dalle3
                     optionsModel.Size = ImageSize._1024x1792;
                     continue;
                 }
-            
+
                 if (s.Length > 1 && s[0] == '-' && s[1] != '-') //fallthrough, although for sanity we should at least allow bare - since thats probably just part of the prompt.
                 {
                     Statics.Logger.Log($"Unknown option: {s}");
@@ -202,7 +203,7 @@ namespace Dalle3
         }
 
         public static string PromptToDestFpWithReservation(ImageGenerationRequest req, string humanReadable, int taskNumber)
-        {            
+        {
             var now = DateTime.Now;
             string usePrompt = Regex.Replace(humanReadable, "[^a-zA-Z0-9]", "_");
             while (usePrompt.Contains("__"))
@@ -240,7 +241,7 @@ namespace Dalle3
             var tries = 0;
             while (true)
             {
-                var fp = $"d:/proj/dalle3/output/{outFn.Replace(".png",$"_{tries}.png")}";
+                var fp = $"d:/proj/dalle3/output/{outFn.Replace(".png", $"_{tries}.png")}";
                 if (!System.IO.File.Exists(fp))
                 {
                     //touch a file there.
@@ -257,37 +258,43 @@ namespace Dalle3
 
         public static IEnumerable<InternalTextSection> IteratePowerSet(IEnumerable<InternalTextSection> items, int minElements = 0, int maxElements = int.MaxValue, int skip = 0, bool randomize = false)
         {
-            int lastIndex = 1 << items.Count();
-
-            for (int index = skip; index < lastIndex; index++)
+            while (true)
             {
-                var subset = new List<InternalTextSection>();
-                for (int ii = 0; ii < items.Count(); ii++)
+                int lastIndex = 1 << items.Count();
+
+                for (int index = skip; index < lastIndex; index++)
                 {
-                    if ((index & (1 << ii)) != 0)
+                    var subset = new List<InternalTextSection>();
+                    for (int ii = 0; ii < items.Count(); ii++)
                     {
-                        subset.Add(items.Skip(ii).First());
+                        if ((index & (1 << ii)) != 0)
+                        {
+                            subset.Add(items.Skip(ii).First());
+                        }
+                    }
+
+                    if (randomize)
+                    {
+                        subset = subset.OrderBy(el => Statics.Random.Next()).ToList();
+                    }
+
+                    if (subset.Count >= minElements)
+                    {
+                        subset = subset.Take(maxElements).ToList();
+                        var newInternal = new InternalTextSection(string.Join(", ", subset.Select(el => el.L)), string.Join(", ", subset.Select(el => el.L)), true, null);
+                        yield return newInternal;
+                        break;
                     }
                 }
-                if (subset.Count < minElements || subset.Count > maxElements)
-                {
-                    continue;
-                }
-
-                if (randomize)
-                {
-                    subset = subset.OrderBy(el=>Statics.Random.Next()).ToList();
-                }
-                
-                var newInternal = new InternalTextSection(string.Join(", ", subset.Select(el => el.L)), string.Join(", ", subset.Select(el => el.L)), true, null);
-                yield return newInternal;
             }
         }
 
         public static InternalTextSection PickRandomPowersetValue(IEnumerable<InternalTextSection> items)
         {
             var num = Random.Next(0, 1 << items.Count());
-            var el = IteratePowerSet(items, 0, int.MaxValue, num, true).First();
+            var raw = IteratePowerSet(items, 0, int.MaxValue, num, true);
+            //var raw = IteratePowerSet(items, 0, 4, num, true);
+            var el = raw.First();
             return el;
         }
 

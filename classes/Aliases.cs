@@ -41,7 +41,7 @@ namespace Dalle3
             var compositionTypes = new Alias("GPTCompositions",
                 "low horizon composition, high horizon composition, gradient following exploratory composition, minimalist sky composition, " +
                 "rule of thirds composition with extreme offset, negative space composition, " +
-                "leading lines composition, symmetrical composition, frame within a frame composition, " +
+                "leading lines composition, symmetrical composition, " +
                 "diagonal composition, golden ratio geometrical compsition, spiral twirling composition, shallow depth of field extreme bokeh composition, " +
                 "textured foreground composition, vibrant color contrast composition, silhouette composition, " +
                 "dynamic tension composition, abstract pattern composition, reflective symmetry composition, " +

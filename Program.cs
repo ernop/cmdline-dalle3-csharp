@@ -132,18 +132,21 @@ namespace Dalle3
                                 Statics.Logger.Log($"Prompt rejection.\t\"{req.Prompt}\"");
                                 System.IO.File.Delete(destFp);
                                 UpdateWithFilterResult(textSections, TextChoiceResultEnum.PromptRejected);
+                                await Task.Delay(2 * 1000);
                             }
                             else if (ex.InnerException.Message.Contains("Your request was rejected as a result of our safety system. Image descriptions generated from your prompt may contain text that is not allowed by our safety system. If you believe this was done in error, your request may succeed if retried, or by adjusting your prompt."))
                             {
                                 Statics.Logger.Log($"Image descriptions from output were bad.\t\"{req.Prompt}\"");
                                 System.IO.File.Delete(destFp);
                                 UpdateWithFilterResult(textSections, TextChoiceResultEnum.DescriptionsBad);
+                                await Task.Delay(2 * 1000);
                             }
                             else if (ex.InnerException.Message.Contains("This request has been blocked by our content filters."))
                             {
                                 Statics.Logger.Log($"Content filter block.\t\"{req.Prompt}\"");
                                 System.IO.File.Delete(destFp);
                                 UpdateWithFilterResult(textSections, TextChoiceResultEnum.RequestBlocked);
+                                await Task.Delay(2 * 1000);
                             }
                             else if (ex.InnerException.Message.Contains("\"Rate limit exceeded for images per minute in organization"))
                             {

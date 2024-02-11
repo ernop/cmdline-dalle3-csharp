@@ -47,6 +47,10 @@ namespace Dalle3
 
         public void ReceiveChoiceResult(string choice, TextChoiceResultEnum result)
         {
+            //okay, for the powerset case this isn't working yet.
+            //i need to reconstruct which of the original internalTextSections were included.
+            //given that there are limitations, that is possible, but seems wrong.
+
             //Console.WriteLine($"I am a thingie and for {choice} I got {result}");
             if (!GoodCounts.ContainsKey(choice))
             {
