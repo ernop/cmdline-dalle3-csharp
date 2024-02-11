@@ -75,7 +75,11 @@ namespace Dalle3
                 await throttler.WaitAsync();
 
                 var taskId = ii+10000;
-                var textSections = optionsModel.PromptSections.ToList().Select(el => el.Sample());
+                var ungroupedTextSections = optionsModel.PromptSections.ToList().Select(el => el.Sample());
+                //we do this so we can track the results of each individual section by punishing them later if there is a rejection..
+
+                var textSections = ungroupedTextSections
+                    .Select(el=> new InternalTextSection(string.Join(",", el.Select(ee=>ee.L)), string.Join(",", el.Select(ee => ee.L)), false, null) );
 
                 var req = new ImageGenerationRequest();
                 req.Model = OpenAI_API.Models.Model.DALLE3;
@@ -120,7 +124,8 @@ namespace Dalle3
                         try
                         {
                             //client.DownloadProgressChanged += (sender, e) => DownloadProgressHappened(sender, e, tempFp, fp, req.Prompt);
-                            client.DownloadFileCompleted += (sender, e) => DownloadCompleted(sender, e, tempFp, destFp, req.Prompt, textSections);
+                            client.DownloadFileCompleted += 
+                                (sender, e) => DownloadCompleted(sender, e, tempFp, destFp, req.Prompt, ungroupedTextSections);
                             client.DownloadFileAsync(new Uri(res.Result.Data[0].Url), tempFp);
                         }
 
@@ -131,28 +136,28 @@ namespace Dalle3
                             {
                                 Statics.Logger.Log($"Prompt rejection.\t\"{req.Prompt}\"");
                                 System.IO.File.Delete(destFp);
-                                UpdateWithFilterResult(textSections, TextChoiceResultEnum.PromptRejected);
+                                UpdateWithFilterResult(ungroupedTextSections, TextChoiceResultEnum.PromptRejected);
                                 await Task.Delay(2 * 1000);
                             }
                             else if (ex.InnerException.Message.Contains("Your request was rejected as a result of our safety system. Image descriptions generated from your prompt may contain text that is not allowed by our safety system. If you believe this was done in error, your request may succeed if retried, or by adjusting your prompt."))
                             {
                                 Statics.Logger.Log($"Image descriptions from output were bad.\t\"{req.Prompt}\"");
                                 System.IO.File.Delete(destFp);
-                                UpdateWithFilterResult(textSections, TextChoiceResultEnum.DescriptionsBad);
+                                UpdateWithFilterResult(ungroupedTextSections, TextChoiceResultEnum.DescriptionsBad);
                                 await Task.Delay(2 * 1000);
                             }
                             else if (ex.InnerException.Message.Contains("This request has been blocked by our content filters."))
                             {
                                 Statics.Logger.Log($"Content filter block.\t\"{req.Prompt}\"");
                                 System.IO.File.Delete(destFp);
-                                UpdateWithFilterResult(textSections, TextChoiceResultEnum.RequestBlocked);
+                                UpdateWithFilterResult(ungroupedTextSections, TextChoiceResultEnum.RequestBlocked);
                                 await Task.Delay(2 * 1000);
                             }
                             else if (ex.InnerException.Message.Contains("\"Rate limit exceeded for images per minute in organization"))
                             {
                                 var sleepTime = 10;
                                 Statics.Logger.Log($"{ex.InnerException.Message}  sleep for: {sleepTime}s");
-                                //UpdateWithFilterResult(textSections, TextChoiceResultEnum.RateLimit);
+                                //UpdateWithFilterResult(ungroupedTextSections, TextChoiceResultEnum.RateLimit);
                                 System.IO.File.Delete(destFp);
                                 await Task.Delay(sleepTime * 1000);
                             }
@@ -160,20 +165,20 @@ namespace Dalle3
                             {
                                 Statics.Logger.Log(ex.InnerException.Message);
                                 System.IO.File.Delete(destFp);
-                                UpdateWithFilterResult(textSections, TextChoiceResultEnum.BillingLimit);
+                                UpdateWithFilterResult(ungroupedTextSections, TextChoiceResultEnum.BillingLimit);
                             }
                             else if (ex.InnerException.Message.Contains("invalid_request_error") && ex.InnerException.Message.Contains(" is too long - \'prompt\'"))
                             {
                                 Statics.Logger.Log($"Your prompt was {req.Prompt.Length} characters and it started: \"{req.Prompt.Substring(0, 30)}...\". This is too long. The actual limit is X.");
                                 System.IO.File.Delete(destFp);
-                                UpdateWithFilterResult(textSections, TextChoiceResultEnum.TooLong);
+                                UpdateWithFilterResult(ungroupedTextSections, TextChoiceResultEnum.TooLong);
                             }
                             else if (ex.InnerException.Message.Contains("Rate limit repeatedly exceeded"))
                             {
                                 Statics.Logger.Log($"You blew up the rate limit unfortunately.");
                                 Statics.Logger.Log($"{GetMessageLine(ex.InnerException.Message)}");
                                 System.IO.File.Delete(destFp);
-                                UpdateWithFilterResult(textSections, TextChoiceResultEnum.RateLimitRepeatedlyExceeded);
+                                UpdateWithFilterResult(ungroupedTextSections, TextChoiceResultEnum.RateLimitRepeatedlyExceeded);
                             }
                             else
                             {
@@ -257,7 +262,8 @@ namespace Dalle3
         //2. so instead i just save them out of view then move them back.
         //3. we also delay creating the unique filename.
         //4. also save an annotated version?
-        private static void DownloadCompleted(object sender, AsyncCompletedEventArgs e, string srcFp, string destFp, string prompt, IEnumerable<InternalTextSection> textSections)
+        private static void DownloadCompleted(object sender, AsyncCompletedEventArgs e, string srcFp, string destFp, 
+            string prompt, IEnumerable<IEnumerable<InternalTextSection>> ungroupedTextSections)
         {
             try
             {
@@ -305,7 +311,7 @@ namespace Dalle3
                     //continue;
                 }
 
-                UpdateWithFilterResult(textSections, TextChoiceResultEnum.Okay);
+                UpdateWithFilterResult(ungroupedTextSections, TextChoiceResultEnum.Okay);
                 //we need to redo the target name cause its gotten taken in the meantime.
 
                 var ann = new Annotator();

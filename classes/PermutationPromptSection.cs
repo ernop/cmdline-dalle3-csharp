@@ -10,17 +10,17 @@ namespace Dalle3
             Setup(s, this);
         }
 
-        public InternalTextSection Sample()
+        public IEnumerable<InternalTextSection> Sample()
         {
             var el = Contents[Statics.Random.Next(0, Contents.Count)];
-            return el;
+            return new List<InternalTextSection>() { el};
         }
 
-        public IEnumerable<InternalTextSection> Iterate()
+        public IEnumerable<IEnumerable<InternalTextSection>> Iterate()
         {
             foreach (var el in Contents)
             {
-                yield return el;
+                yield return new List<InternalTextSection>() { el };
             }
         }
         public override string ToString()

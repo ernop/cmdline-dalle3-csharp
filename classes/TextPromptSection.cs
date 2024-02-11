@@ -14,16 +14,13 @@ namespace Dalle3
             S = new InternalTextSection(s, s, true, this);
         }
 
-        public InternalTextSection Sample()
-        {
-            return S;
-        }
+        public IEnumerable<InternalTextSection> Sample() => new List<InternalTextSection>() { S };
 
-        public IEnumerable<InternalTextSection> Iterate()
+        public IEnumerable<IEnumerable<InternalTextSection>> Iterate()
         {
             while (true)
             {
-                yield return S;
+                yield return new List<InternalTextSection>() { S };
             }
         }
 
@@ -69,7 +66,7 @@ namespace Dalle3
             }
             else
             {
-                res += $"\t{(100*BadCount / (1.0 *BadCount + GoodCount)):0.0}b%. (b: {BadCount}, g: {GoodCount})";
+                res += $"\t{(100 * BadCount / (1.0 * BadCount + GoodCount)):0.0}b%. (b: {BadCount}, g: {GoodCount})";
             }
             return res;
         }

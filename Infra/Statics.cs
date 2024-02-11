@@ -256,7 +256,7 @@ namespace Dalle3
             }
         }
 
-        public static IEnumerable<InternalTextSection> IteratePowerSet(IEnumerable<InternalTextSection> items, int minElements = 0, int maxElements = int.MaxValue, int skip = 0, bool randomize = false)
+        public static IEnumerable<IEnumerable<InternalTextSection>> IteratePowerSet(IEnumerable<InternalTextSection> items, int minElements = 0, int maxElements = int.MaxValue, int skip = 0, bool randomize = false)
         {
             while (true)
             {
@@ -281,15 +281,16 @@ namespace Dalle3
                     if (subset.Count >= minElements)
                     {
                         subset = subset.Take(maxElements).ToList();
-                        var newInternal = new InternalTextSection(string.Join(", ", subset.Select(el => el.L)), string.Join(", ", subset.Select(el => el.L)), true, null);
-                        yield return newInternal;
+                        yield return subset;
+                        //var newInternal = new InternalTextSection(string.Join(", ", subset.Select(el => el.L)), string.Join(", ", subset.Select(el => el.L)), true, null);
+                        //yield return newInternal;
                         break;
                     }
                 }
             }
         }
 
-        public static InternalTextSection PickRandomPowersetValue(IEnumerable<InternalTextSection> items)
+        public static IEnumerable<InternalTextSection> PickRandomPowersetValue(IEnumerable<InternalTextSection> items)
         {
             var num = Random.Next(0, 1 << items.Count());
             var raw = IteratePowerSet(items, 0, int.MaxValue, num, true);
@@ -314,15 +315,19 @@ namespace Dalle3
             return res;
         }
 
-        public static void UpdateWithFilterResult(IEnumerable<InternalTextSection> sections, TextChoiceResultEnum el)
+        public static void UpdateWithFilterResult(IEnumerable<IEnumerable<InternalTextSection>> ungroupedSections, TextChoiceResultEnum el)
         {
-            foreach (var section in sections)
+            ///So for example a powerset of [a,b,c] might send (a,c) here.
+            foreach (var section in ungroupedSections)
             {
-                if (section.Parent == null)
+                foreach (var p in section)
                 {
-                    continue;
+                    if (p.Parent == null)
+                    {
+                        continue;
+                    }
+                    p.Parent.ReceiveChoiceResult(p.S, el); ;
                 }
-                section.Parent.ReceiveChoiceResult(section.S, el); ;
             }
         }
     }

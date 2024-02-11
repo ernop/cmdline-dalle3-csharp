@@ -16,16 +16,16 @@ namespace Dalle3
             Setup(s, this);
         }
 
-        public InternalTextSection Sample()
+        public IEnumerable<InternalTextSection> Sample()
         {
             return Statics.PickRandomPowersetValue(Contents);
         }
 
-        public IEnumerable<InternalTextSection> Iterate()
+        public IEnumerable<IEnumerable<InternalTextSection>> Iterate()
         {
             foreach (var el in Statics.IteratePowerSet(Contents, 0, 0, 0))
             {
-                yield return el ;
+                yield return el;
             }
         }
 
