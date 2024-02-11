@@ -75,7 +75,7 @@ namespace Dalle3
                 await throttler.WaitAsync();
 
                 var taskId = ii+10000;
-                var textSections = optionsModel.PromptSections.ToList().Select(x => x.Sample());
+                var textSections = optionsModel.PromptSections.ToList().Select(el => el.Sample());
 
                 var req = new ImageGenerationRequest();
                 req.Model = OpenAI_API.Models.Model.DALLE3;
@@ -194,20 +194,27 @@ namespace Dalle3
             }
 
             Statics.Logger.Log("Got to end, waiting. =================.");
-            await Task.WhenAll(tasks);
-            Statics.Logger.Log("======done with WhenALL. =================.");
             
+            var last = 0;
             while (true)
             {
                 Statics.Logger.Log($"\tDownloaded:{DownloadedCount}, Requested:{RequestedCount}, Errored:{ErrorCount}");
+                Statics.Logger.Log("======Intermediate report =================.");
+                foreach (var el in optionsModel.PromptSections)
+                {
+                    Statics.Logger.Log(el.ReportResults());
+                }
+
                 if (RequestedCount <= DownloadedCount + ErrorCount)
                 {
                     break;
                 }
-                await Task.Delay(1000);
+                
+                await Task.Delay(6000);
             }
-            
-            Statics.Logger.Log("======Reports: =================.");
+            await Task.WhenAll(tasks);
+            Statics.Logger.Log("======done with WhenALL. =================.");
+            Statics.Logger.Log("======Final Report=================.");
             foreach (var el in optionsModel.PromptSections)
             {
                 Statics.Logger.Log(el.ReportResults());

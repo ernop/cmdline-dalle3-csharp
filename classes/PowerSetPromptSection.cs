@@ -18,9 +18,7 @@ namespace Dalle3
 
         public InternalTextSection Sample()
         {
-            //TODO actually fix this.
-            var el = Contents[Statics.Random.Next(0, Contents.Count())];
-            return el;
+            return Statics.PickRandomPowersetValue(Contents);
         }
 
         public IEnumerable<InternalTextSection> Iterate()

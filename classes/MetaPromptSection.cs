@@ -15,7 +15,7 @@ namespace Dalle3
         private int GoodCount { get; set; } = 0;
         private Dictionary<string, int> GoodCounts { get; } = new Dictionary<string, int>();
         private Dictionary<string, int> BadCounts { get; } = new Dictionary<string, int>();
-        public void Setup(string s, IPromptSection parent)
+        public void Setup(string input, IPromptSection parent)
         {
             ///three options:
             /// {GPTLocations} => a,b,c
@@ -23,7 +23,7 @@ namespace Dalle3
             /// {a boy, a dog, a horse} => 3 long versions
             /// Also actually the [] sections are included here too.
 
-            var parts = s.Split(',').Select(el => el.Trim());
+            var parts = input.Split(',').Select(el => el.Trim());
             //so now we have either ["GPTLocations"], ["a boy"], or ["a boy", "a dog", "a horse"]
 
             foreach (var part in parts)

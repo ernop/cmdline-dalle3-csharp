@@ -23,7 +23,7 @@ namespace Dalle3
                 "low horizon composition, high horizon composition, minimalist sky composition, " +
                 "rule of thirds with extreme offset composition, negative space composition, " +
                 "leading lines composition, symmetrical composition, frame within a frame composition, " +
-                "diagonal composition, golden ratio, spiral composition, shallow depth of field composition, " +
+                "diagonal composition, golden ratio geometrical compsition, spiral twirling composition, shallow depth of field extreme bokeh composition, " +
                 "textured foreground composition, vibrant color contrast composition, silhouette composition, " +
                 "dynamic tension composition, abstract pattern composition, reflective symmetry composition, " +
                 "juxtaposition composition, balanced elements composition");

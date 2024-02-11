@@ -15,7 +15,7 @@ namespace Dalle3
         /// <summary>
         /// This refers to the order that images are generated. Going random gives you faster visibility into coverage
         /// </summary>
-        public bool Random { get; set; } = false;
+        //public bool Random { get; set; } = false;
         public ImageSize Size { get; set; }
         
         //hd, standard

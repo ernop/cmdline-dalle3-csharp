@@ -50,7 +50,31 @@ namespace Dalle3
                 inp = "“Tiger, one day you will come to a fork in the road,” he said. “And you’re going to have to make a decision about which direction you want to go.” He raised his hand and pointed. “If you go that way you can be somebody. You will have to make compromises and you will have to turn your back on your friends. But you will be a member of the club and you will get promoted and you will get good assignments.” Then Boyd raised his other hand and pointed another direction. “Or you can go that way and you can do something—something for your country and for your Air Force and for yourself. If you decide you want to do something, you may not get promoted and you may not get the good assignments and you certainly will not be a favorite of your superiors. But you won’t have to compromise yourself. You will be true to your friends and to yourself. And your work might make a difference.” He paused and stared into Leopold’s eyes and heart. “To be somebody or to do something. In life there is often a roll call. That’s when you will have to make a decision. To be or to do? Which way will you go?” " +
                     "{GPTLocations}" +
                     "{GPTStyles}  -r";
-                inp = "A visual to accompany the text: 'Three can keep a secret, if two of them are dead.' {GPTLocations} {GPTStyles}  -r -hd -h -10";
+                inp = "a minimalistic image combining [lightning, lava, lasers, dinosaurs, volcanos, magma, explosions, constellations, waterfalls," +
+                    "ice walls, glaciers, numinosity, cumulonimbus, thunderstorms, ball lightning, will'o'the wisps, horsemen, wild horses, cliffs, " +
+                    "barren, plains, walls, arrow slits, towers, grandiosity, naturalness, minimalism, chiaroscuro, opacity, translucency, " +
+                    "symbolism, adonis, statues, monumental architecture, brutalism, naturalism, spheres, aliens, ocean vessels, kayaks, ice floes, icebergs, " +
+                    "sheer cliffs, crevasses, natural disasters, tornados, waterspouts, milky way galaxy, galaxies, andromeda, black dwarves, dwarf horses, venus fly traps," +
+                    "carnivorous plants, ice cream,] -hd -h -40";
+                //inp = "a minimalistic image combining {lightning, lava, lasers, dinosaurs, volcanos, magma, explosions, constellations, waterfalls," +
+                //    "ice walls, glaciers, numinosity, cumulonimbus, thunderstorms, ball lightning, will'o'the wisps, horsemen, wild horses, cliffs, " +
+                //    "barren, plains, walls, arrow slits, towers, grandiosity, naturalness, minimalism, chiaroscuro, opacity, translucency, " +
+                //    "symbolism, adonis, statues, monumental architecture, brutalism, naturalism, spheres, aliens, ocean vessels, kayaks, ice floes, icebergs, " +
+                //    "sheer cliffs, crevasses, natural disasters, tornados, waterspouts, milky way galaxy, galaxies, andromeda, black dwarves, dwarf horses, venus fly traps," +
+                //    "carnivorous plants, ice cream} {lightning, lava, lasers, dinosaurs, volcanos, magma, explosions, constellations, waterfalls, ice walls, glaciers, " +
+                //    "numinosity, cumulonimbus, thunderstorms, ball lightning, will'o'the wisps, horsemen, wild horses, cliffs, barren, plains, walls, arrow slits, " +
+                //    "towers, grandiosity, naturalness, minimalism, chiaroscuro, opacity, translucency, symbolism, adonis, statues, monumental architecture, " +
+                //    "brutalism, naturalism, spheres, aliens, ocean vessels, kayaks, ice floes, icebergs, sheer cliffs, crevasses, natural disasters, " +
+                //    "tornados, waterspouts, milky way galaxy, galaxies, andromeda, black dwarves, dwarf horses, venus fly traps,carnivorous plants, ice cream} " +
+                //    "{lightning, lava, lasers, dinosaurs, volcanos, magma, explosions, constellations, waterfalls,ice walls, glaciers, numinosity, cumulonimbus," +
+                //    " thunderstorms, ball lightning, will'o'the wisps, horsemen, wild horses, cliffs, barren, plains, walls, arrow slits, towers, grandiosity, " +
+                //    "naturalness, minimalism, chiaroscuro, opacity, translucency, symbolism, adonis, statues, monumental architecture, brutalism, naturalism, " +
+                //    "spheres, aliens, ocean vessels, kayaks, ice floes, icebergs, sheer cliffs, crevasses, natural disasters, tornados, waterspouts, milky way galaxy," +
+                //    " galaxies, andromeda, black dwarves, dwarf horses, venus fly traps,carnivorous plants, ice cream} {lightning, lava, lasers, dinosaurs, volcanos, magma, " +
+                //    "explosions, constellations, waterfalls,ice walls, glaciers, numinosity, cumulonimbus, thunderstorms, ball lightning, will'o'the wisps, horsemen, wild horses, " +
+                //    "cliffs, barren, plains, walls, arrow slits, towers, grandiosity, naturalness, minimalism, chiaroscuro, opacity, translucency, symbolism, adonis, statues,"+
+                //    "monumental architecture, brutalism, naturalism, spheres, aliens, ocean vessels, kayaks, ice floes, icebergs, sheer cliffs, crevasses, natural disasters, "+
+                //    "tornados, waterspouts, milky way galaxy, galaxies, andromeda, black dwarves, dwarf horses, venus fly traps,carnivorous plants, ice cream} -hd -h -40";
                 return inp;
             }
         }
@@ -123,7 +147,7 @@ namespace Dalle3
             optionsModel.IncludeNormalImageOutput = true;
             optionsModel.IncludeAnnotatedImageOutput = true;
 
-            var numre = new Regex(@"\-([\d]{1,2})");
+            var numre = new Regex(@"\-([\d]{1,3})");
             var count = 0;
             var usingRawPrompt = "";
             foreach (string s in args)
@@ -169,12 +193,7 @@ namespace Dalle3
                     optionsModel.Size = ImageSize._1024x1792;
                     continue;
                 }
-                if (s == "-r")
-                {
-                    optionsModel.Random = true;
-                    continue;
-                }
-
+            
                 if (s.Length > 1 && s[0] == '-' && s[1] != '-') //fallthrough, although for sanity we should at least allow bare - since thats probably just part of the prompt.
                 {
                     Statics.Logger.Log($"Unknown option: {s}");
@@ -260,7 +279,7 @@ namespace Dalle3
             }
         }
 
-        public static IEnumerable<InternalTextSection> IteratePowerSet(IEnumerable<InternalTextSection> items, int minElements = 0, int maxElements = int.MaxValue, int skip = 0)
+        public static IEnumerable<InternalTextSection> IteratePowerSet(IEnumerable<InternalTextSection> items, int minElements = 0, int maxElements = int.MaxValue, int skip = 0, bool randomize = false)
         {
             int lastIndex = 1 << items.Count();
 
@@ -279,16 +298,21 @@ namespace Dalle3
                     continue;
                 }
 
-                var newInternal = new InternalTextSection(string.Join(" ", subset.Select(el => el.L)), string.Join(" ", subset.Select(el => el.L)), true, null);
+                if (randomize)
+                {
+                    subset = subset.OrderBy(el=>Statics.Random.Next()).ToList();
+                }
+                
+                var newInternal = new InternalTextSection(string.Join(", ", subset.Select(el => el.L)), string.Join(" ", subset.Select(el => el.L)), true, null);
                 yield return newInternal;
             }
         }
 
-        public static IEnumerable<InternalTextSection> PickRandomPowersetValue(IEnumerable<InternalTextSection> items)
+        public static InternalTextSection PickRandomPowersetValue(IEnumerable<InternalTextSection> items)
         {
-            var num = Random.Next(0, items.Count());
-            var el = IteratePowerSet(items, 0, 0, num).First();
-            yield return el;
+            var num = Random.Next(0, 1 << items.Count());
+            var el = IteratePowerSet(items, 0, int.MaxValue, num, true).First();
+            return el;
         }
 
         /// <summary>
