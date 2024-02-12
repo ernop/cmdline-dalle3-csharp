@@ -24,6 +24,13 @@ namespace Dalle3
             }
             else
             {
+                if (S == L)
+                {
+                    //I guess this is the case where we don't expand.
+                    return S;
+                }
+
+                //this is where it's more like an abbreviation.
                 return $"{S}:{L}";
             }
         }

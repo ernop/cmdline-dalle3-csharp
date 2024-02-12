@@ -31,7 +31,7 @@ namespace Dalle3
                 "tsunamis,  beholder monsters, manatees, shattered spheres,  double rainbows, triple rainbows");
 
             var forts = new Alias("GPTForts",
-                "zero-point energy, dark matter, plasma,monumental architecture, fort knox, the white house, the louvre, the golden temple of amritsar, the taj mahal, " +
+                "zero-point energy, dark matter, plasma, monumental architecture, fort knox, the white house, the louvre, the golden temple of amritsar, the taj mahal, " +
                 "brutalist architecture, giant curtain walls, arrow slits, a wizard's tower,supernovae, quasars, parallel universes, monumental glaciers, sheer cliffs, crevasses, " +
                 "infinite stairways, oil rigs, a castle, moats, megaliths, arcologies,Hokkaido, " +
                 "red square, mordor, narnia, the white witch, the washington monument, milky way galaxy, " +
@@ -376,6 +376,7 @@ namespace Dalle3
                     new Alias("Sprang", "reminiscent of the style of dick sprang"),
                     new Alias("Pointillism", "a pointillism painting in amazingly detailed but clear dotted style with small dots and round"),
                     new Alias("Photo", "a super detailed incredibly resilient close-up masterwork photo from ansel adems on the most modern digital equipment."),
+
                 };
 
             return aliases;

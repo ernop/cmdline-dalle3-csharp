@@ -28,20 +28,28 @@ namespace Dalle3
 
         static async Task Main(string[] args)
         {
-            await AsyncMain(args);
+            bool locl = false;
+            locl = true;
+            //overriding for testing etc.
+
+            if (locl && (args.Length == 0))
+            {
+                foreach (var aa in Statics.OverridePromptsForTesting)
+                {
+                    await AsyncMain(aa.Split(' '));
+                }
+            }
+            else
+            {
+                await AsyncMain(args);
+            }
+            Console.ReadLine();
         }
 
         static async Task AsyncMain(string[] args)
         {
             var tasks = new List<Task>();
             var throttler = new SemaphoreSlim(10, 10);
-            var locl = false;
-            locl = true;
-            //overriding for testing etc.
-            if (locl && (args.Length == 0))
-            {
-                args = Statics.OverridePromptForTesting.Split(new[] { " " }, StringSplitOptions.None);
-            }
 
             var quality = "hd";
             var sz = ImageSize._1792x1024;
@@ -79,7 +87,7 @@ namespace Dalle3
                 //we do this so we can track the results of each individual section by punishing them later if there is a rejection..
 
                 var textSections = ungroupedTextSections
-                    .Select(el=> new InternalTextSection(string.Join(",", el.Select(ee=>ee.L)), string.Join(",", el.Select(ee => ee.L)), false, null) );
+                    .Select(el => new InternalTextSection(string.Join(",", el.Select(ee=>ee.L)), string.Join(",", el.Select(ee => ee.L)), false, null) );
 
                 var req = new ImageGenerationRequest();
                 req.Model = OpenAI_API.Models.Model.DALLE3;
@@ -232,7 +240,6 @@ namespace Dalle3
 
             Statics.Logger.Log($"{DownloadedCount}/{RequestedCount} downloaded successfully ({100.0*DownloadedCount / (RequestedCount * 1.0):0.0}%). Hit a key to end.");
 
-            Console.ReadLine();
         }
 
         private static string GetMessageLine(string inlines)
