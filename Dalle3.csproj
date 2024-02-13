@@ -72,6 +72,7 @@
     <Compile Include="Infra\Log.cs" />
     <Compile Include="classes\MetaPromptSection.cs" />
     <Compile Include="Infra\OptionsModel.cs" />
+    <Compile Include="Infra\OverridePrompts.cs" />
     <Compile Include="Infra\Parser.cs" />
     <Compile Include="classes\PermutationPromptSection.cs" />
     <Compile Include="classes\PowerSetPromptSection.cs" />

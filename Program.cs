@@ -17,6 +17,7 @@ using System.Diagnostics.Eventing.Reader;
 using MetadataExtractor.Formats.Gif;
 using System.Threading;
 using MetadataExtractor.Formats.Exif.Makernotes;
+using Dalle3.Infra;
 
 namespace Dalle3
 {
@@ -24,7 +25,7 @@ namespace Dalle3
     {
         public static int RequestedCount { get; set; } = 0;
         public static int DownloadedCount { get; set; } = 0;
-        public static int ErrorCount{ get; set; } = 0;
+        public static int ErrorCount { get; set; } = 0;
 
         static async Task Main(string[] args)
         {
@@ -34,7 +35,7 @@ namespace Dalle3
 
             if (locl && (args.Length == 0))
             {
-                foreach (var aa in Statics.OverridePromptsForTesting)
+                foreach (var aa in OverridePrompts.OverridePromptsForTesting)
                 {
                     await AsyncMain(aa.Split(' '));
                 }
@@ -72,22 +73,30 @@ namespace Dalle3
                 Usage();
                 Environment.Exit(0);
             }
-            //Statics.Logger.Log($"There are: {optionsModel.EffectivePrompts.Count} prompts, which we will repeat {optionsModel.ImageNumber} times.");
+
             var api = new OpenAI_API.OpenAIAPI(Statics.ApiKey);
-            
+
             var start = DateTime.Now;
-            
+
             for (var ii = 0; ii < optionsModel.ImageNumber; ii++)
             {
                 //general obey rate limit.
                 await throttler.WaitAsync();
 
-                var taskId = ii+10000;
-                var ungroupedTextSections = optionsModel.PromptSections.ToList().Select(el => el.Sample());
+                var taskId = ii + 10000;
+                IEnumerable<IEnumerable<InternalTextSection>> ungroupedTextSections;
                 //we do this so we can track the results of each individual section by punishing them later if there is a rejection..
 
+                if (optionsModel.Random)
+                {
+                    ungroupedTextSections = optionsModel.PromptSections.ToList().Select(el => el.Sample()).ToList();
+                }
+                else
+                {
+                    ungroupedTextSections = optionsModel.PromptSections.ToList().Select(el => el.Iterate()).ToList();
+                }
                 var textSections = ungroupedTextSections
-                    .Select(el => new InternalTextSection(string.Join(",", el.Select(ee=>ee.L)), string.Join(",", el.Select(ee => ee.L)), false, null) );
+                    .Select(el => new InternalTextSection(string.Join(",", el.Select(ee => ee.L)), string.Join(",", el.Select(ee => ee.L)), false, null));
 
                 var req = new ImageGenerationRequest();
                 req.Model = OpenAI_API.Models.Model.DALLE3;
@@ -98,7 +107,7 @@ namespace Dalle3
                 //var usingSubPrompt = Substitutions.SubstituteExpansionsIntoPrompt(subPrompt);
                 var textx = textSections.Select(el => el.L);
 
-                req.Prompt = string.Join(" ", textx).Replace(" ,",",");
+                req.Prompt = string.Join(" ", textx).Replace(" ,", ",");
                 req.Size = optionsModel.Size;
                 var humanReadable = string.Join("_", textSections.Select(el => el.GetValueForHumanConsumption()));
 
@@ -132,7 +141,7 @@ namespace Dalle3
                         try
                         {
                             //client.DownloadProgressChanged += (sender, e) => DownloadProgressHappened(sender, e, tempFp, fp, req.Prompt);
-                            client.DownloadFileCompleted += 
+                            client.DownloadFileCompleted +=
                                 (sender, e) => DownloadCompleted(sender, e, tempFp, destFp, req.Prompt, ungroupedTextSections);
                             client.DownloadFileAsync(new Uri(res.Result.Data[0].Url), tempFp);
                         }
@@ -212,7 +221,7 @@ namespace Dalle3
             }
 
             Statics.Logger.Log("Got to end, waiting. =================.");
-            
+
             var last = 0;
             while (true)
             {
@@ -227,7 +236,7 @@ namespace Dalle3
                 {
                     break;
                 }
-                
+
                 await Task.Delay(6000);
             }
             await Task.WhenAll(tasks);
@@ -238,7 +247,7 @@ namespace Dalle3
                 Statics.Logger.Log(el.ReportResults());
             }
 
-            Statics.Logger.Log($"{DownloadedCount}/{RequestedCount} downloaded successfully ({100.0*DownloadedCount / (RequestedCount * 1.0):0.0}%). Hit a key to end.");
+            Statics.Logger.Log($"{DownloadedCount}/{RequestedCount} downloaded successfully ({100.0 * DownloadedCount / (RequestedCount * 1.0):0.0}%). Hit a key to end.");
 
         }
 
@@ -269,7 +278,7 @@ namespace Dalle3
         //2. so instead i just save them out of view then move them back.
         //3. we also delay creating the unique filename.
         //4. also save an annotated version?
-        private static void DownloadCompleted(object sender, AsyncCompletedEventArgs e, string srcFp, string destFp, 
+        private static void DownloadCompleted(object sender, AsyncCompletedEventArgs e, string srcFp, string destFp,
             string prompt, IEnumerable<IEnumerable<InternalTextSection>> ungroupedTextSections)
         {
             try
@@ -290,7 +299,7 @@ namespace Dalle3
                     System.IO.File.Copy(srcFp, destFp, true);
                     System.IO.File.Delete(srcFp);
                     DownloadedCount++;
-                    
+
                 }
                 catch (System.IO.FileNotFoundException ex)
                 {
@@ -324,18 +333,18 @@ namespace Dalle3
                 var ann = new Annotator();
                 //assume the file exists at uniquefp now.
                 var annotatedFp = destFp.Replace(".png", "_annotated.png");
-                
+
                 var directory = Path.GetDirectoryName(annotatedFp);
                 var filename = Path.GetFileName(annotatedFp);
                 annotatedFp = directory + "/annotated/" + filename;
-                
+
                 ann.Annotate(destFp, annotatedFp, prompt, true);
-                
+
                 Statics.Logger.Log($"\t{DownloadedCount}/{RequestedCount} Saved. \t{destFp}\t");
             }
             catch (Exception ex)
             {
-                Statics.Logger.Log("weird error."+ex.ToString());
+                Statics.Logger.Log("weird error." + ex.ToString());
                 ErrorCount++;
             }
         }

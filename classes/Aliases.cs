@@ -27,7 +27,7 @@ namespace Dalle3
                 "singularities, black holes, solar panels, teslas, drone haircut matchines, geodes, fulgurites, glow worms, sandworms, " +
                 "hexapods, ant farms, butterflies, cats, shark teeth, sharks, moon rocks, stalactites, missiles, cluster munitions, bullets, fireballs, electricity, " +
                 "DNA helices, princesses, knights,  " +
-                "the word 'ROBLOX', the alphabet, a mega-kanji, kaiju, centipedes, alien kaiju,lich, "+
+                "the word 'ROBLOX', the alphabet, a mega-kanji, kaiju, centipedes, alien kaiju,lich, " +
                 "tsunamis,  beholder monsters, manatees, shattered spheres,  double rainbows, triple rainbows");
 
             var forts = new Alias("GPTForts",
@@ -48,6 +48,11 @@ namespace Dalle3
                 "juxtaposition composition, balanced elements composition");
 
             var locations = new Alias("GPTLocations",
+                "Seaside cliffs of rural Seoul, the moors of central barren foggy Scotland along a plateau edge above an abandoned castle, " +
+                "the San Francisco bay trail in fog, " +
+                "The sf peninsula foggy hills above Half Moon Bay, " +
+                "An infinitely high cliff overlooking a beautiful detailed paradise farming world, " +
+                "A post-apocalyptic restoration center for humanity" +
                 "The Ruins of an Ancient City among the crumbling walls lost relics and symbols and abandoned empty streets of a once-great metropolis, " +
                 "A Floating City in the Clouds with aerial platforms and suspended walkways that provide a unique three-dimensional space, " +
                 "An Underwater City among submerged buildings and coral reefs with sea creatures and glowing hints of life and wear, " +
@@ -232,6 +237,11 @@ namespace Dalle3
                 "A detailed Renaissance fresco, " +
                 "A Gothic tapestry rich with allegory, " +
                 //"A bold graffiti mural in a street art style, " +
+                "A detailed graphic novel illustration, " +
+                "super high resolution close-up drawing," +
+                " intensely emotional watercolor, " +
+                "pop poster in Rococo style, " +
+                "Art Nouveau image"+
                 "A photorealistic graphite sketch, " +
                 "A Rococo pastel portrait, " +
                 "Comic book style image in the style of Tom Tomorrow, " +
@@ -339,18 +349,18 @@ namespace Dalle3
                     compositionTypes,
 
                     ///These are for making set decks, and more function as simple terms to refer to variation beyond which we probably don't really need to see.
-                    new Alias("A", "A single letter \"A\""),
-                    new Alias("B", "A single letter \"B\""),
-                    new Alias("C", "A single letter \"C\""),
-                    new Alias("blue", "written in deep clear sharp blue ink, carefully written and drawn"),
-                    new Alias("black", "written in black ink"),
-                    new Alias("golden", "written in gold ink"),
-                    new Alias("alive", "very simple normal form of a letter, with just one or two hidden tiny eyes, and one tiny claw or other subtle signs of life"),
-                    new Alias("furry", "covered with a short, fine fur, which waves and flows from the edges."),
-                    new Alias("squares", "made of tiny squares stacked in rows"),
-                    new Alias("3d", "as a 3d rendered protuding non-flat object viewed at an angle in pointillism style"),
-                    new Alias("2d", "drawn in a completely flat comic side view style, in papyrus font, these are just shapes and lines in watercolor style"),
-                    new Alias("calligraphy", "done in completely flat hand-written traditional calligraphy"),
+                    //new Alias("A", "A single letter \"A\""),
+                    //new Alias("B", "A single letter \"B\""),
+                    //new Alias("C", "A single letter \"C\""),
+                    //new Alias("blue", "written in deep clear sharp blue ink, carefully written and drawn"),
+                    //new Alias("black", "written in black ink"),
+                    //new Alias("golden", "written in gold ink"),
+                    //new Alias("alive", "very simple normal form of a letter, with just one or two hidden tiny eyes, and one tiny claw or other subtle signs of life"),
+                    //new Alias("furry", "covered with a short, fine fur, which waves and flows from the edges."),
+                    //new Alias("squares", "made of tiny squares stacked in rows"),
+                    //new Alias("3d", "as a 3d rendered protuding non-flat object viewed at an angle in pointillism style"),
+                    //new Alias("2d", "drawn in a completely flat comic side view style, in papyrus font, these are just shapes and lines in watercolor style"),
+                    //new Alias("calligraphy", "done in completely flat hand-written traditional calligraphy"),
 
                     new Alias("Rainbow", "in a glorious rainbow"),
                     new Alias("Lightning", "in a lightning storm"),
@@ -376,8 +386,12 @@ namespace Dalle3
                     new Alias("Sprang", "reminiscent of the style of dick sprang"),
                     new Alias("Pointillism", "a pointillism painting in amazingly detailed but clear dotted style with small dots and round"),
                     new Alias("Photo", "a super detailed incredibly resilient close-up masterwork photo from ansel adems on the most modern digital equipment."),
-
-                };
+                    
+                    //this is for a later SET
+                    new Alias("plants", "which are flower pots and are totally overgrown with plants of many types and have dripping waterfalls over their sides"),
+                    new Alias("houses", "which are houses arranged on a flat white infinite plain. They have lots of damage and are surrounded with glowing lightning bolts"),
+                    new Alias("candles", "which are candles with a small yellow flame and covered with pure white snow and wisps of fog circling through beneath a night sky.")
+            };
 
             return aliases;
         }

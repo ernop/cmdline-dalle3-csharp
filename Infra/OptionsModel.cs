@@ -13,13 +13,14 @@ namespace Dalle3
 
         public int ImageNumber { get; set; }
         /// <summary>
-        /// This refers to the order that images are generated. Going random gives you faster visibility into coverage
+        /// Random = sample randomly, this false means iterate in order.
         /// </summary>
-        //public bool Random { get; set; } = false;
+        public bool Random { get; set; } = true; //this HAS to be true otherwise it breaks for now, fix this bug.
         public ImageSize Size { get; set; }
         
         //hd, standard
         public string Quality { get; set; } 
+
     }
 
 }

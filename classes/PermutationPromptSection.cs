@@ -16,11 +16,11 @@ namespace Dalle3
             return new List<InternalTextSection>() { el};
         }
 
-        public IEnumerable<IEnumerable<InternalTextSection>> Iterate()
+        public IEnumerable<InternalTextSection> Iterate()
         {
             foreach (var el in Contents)
             {
-                yield return new List<InternalTextSection>() { el };
+                yield return el;
             }
         }
         public override string ToString()

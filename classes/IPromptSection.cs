@@ -14,7 +14,7 @@ namespace Dalle3
         /// <summary>
         /// Iterate over all possible values.
         /// </summary>
-        IEnumerable<IEnumerable<InternalTextSection>> Iterate();
+        IEnumerable<InternalTextSection> Iterate();
 
         /// <summary>
         /// For tracking failures by choices etc.

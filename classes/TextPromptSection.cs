@@ -16,11 +16,11 @@ namespace Dalle3
 
         public IEnumerable<InternalTextSection> Sample() => new List<InternalTextSection>() { S };
 
-        public IEnumerable<IEnumerable<InternalTextSection>> Iterate()
+        public IEnumerable<InternalTextSection> Iterate()
         {
             while (true)
             {
-                yield return new List<InternalTextSection>() { S };
+                yield return S;
             }
         }
 
