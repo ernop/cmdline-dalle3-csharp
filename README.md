@@ -1,3 +1,9 @@
+# Todos
+* don't re-send repeatedly blocked prompts upstream, but make this configurable
+* show you how much each run is going to cost, including -h -hd etc.
+* dynamically avoid words/phrases/expansions which tend to be blocked
+* figure out if you are charged for requests which end up getting blocked, and if it varies by which stage you are blocked at?
+
 # Version 1.1 2024.02.10
 
 redoing the way we calculate permutations, etc.

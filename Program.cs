@@ -109,8 +109,9 @@ namespace Dalle3
                 //var usingSubPrompt = Substitutions.SubstituteExpansionsIntoPrompt(subPrompt);
                 var textx = textSections.Select(el => el.L);
 
-                var tt = CultureInfo.CurrentCulture.TextInfo;
-                req.Prompt = tt.ToTitleCase(string.Join(" ", textx).Replace(" ,", ","));
+                //var tt = CultureInfo.CurrentCulture.TextInfo;
+                //req.Prompt = tt.ToTitleCase(string.Join(" ", textx).Replace(" ,", ","));
+                req.Prompt = string.Join(" ", textx).Replace(" ,", ",").ToLowerInvariant();
                 req.Size = optionsModel.Size;
                 var humanReadable = string.Join("_", textSections.Select(el => el.GetValueForHumanConsumption())).Replace(',','_');
 
