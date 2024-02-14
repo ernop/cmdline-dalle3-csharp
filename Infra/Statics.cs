@@ -19,7 +19,7 @@ namespace Dalle3
         public static Logger Logger = new Logger("../../logs/log.txt");
         public static string ApiKey { get; set; } = System.IO.File.ReadAllText("../../apikey.txt");
         public static string OrgId { get; set; } = System.IO.File.ReadAllText("../../organization.txt");
-        public static Random Random = new Random(1000);
+        public static Random Random = new Random();
 
         /// <summary>
         /// Configure your tier yourself! visit this page: https://platform.openai.com/docs/guides/rate-limits/usage-tiers while logged in
@@ -52,12 +52,21 @@ namespace Dalle3
 
         public static void Usage()
         {
-            Console.WriteLine("Dalle3.exe [-N] [-r] [-h|v] [-hd] [prompt]\r\ndalle3.exe A very {big,blue,tall} photo of a {tall,small} {cat,dog,mouse monster}\r\nN=number of times to repeat prompt. Will die if any fail. Prompt can be multiple words with no quotes required, but no newlines." +
-                "\r\n{}=run all permutations of the items within here. This can blow up your api limits." +
-                "\r\n-r output items in random order. default or missing, will output in permutation order." +
-                "\r\n by default outputs normal and annotated versions of images. If you want no normal do '-nonormal', if you want no annotated do '-noann'" +
-                "\r\n-h|v make image horizontal or vertical. the default is square." +
-                "\r\n-hd make image in hd. The default is standard, and is cheaper.");
+            Console.WriteLine("\r\nFormat------ 'Dalle3.exe [-N] [-r] [-h|v] [-hd] [prompt]'" +
+                "\r\nExample-------- 'Dalle3.exe A very {big,blue,tall} photo of a [tall,small] [1-2,cat,dog,mouse monster] i the stylue of {GPTArtstyles}'" +
+                "\r\n\r\nExplanation of terms:" +
+                "\r\n\tN = \t\t\tnumber of times to repeat prompt. Will die if any fail. Prompt can be multiple words with no quotes required, but no newlines." +
+                "\r\n\t-r =\t\t\toutput items in random order. default or missing, will output in permutation order. This applies to both permutations and powersets. So without -r you will iterate through all subsets in order." +
+                "\r\n\t-h|v =\t\t\tmake image horizontal or vertical. the default is square." +
+                "\r\n\t-hd = \t\t\tmake image in hd. The default is standard, and is cheaper." +
+                "\r\n\t{X,Y,Z,...} =\t\tpick one of these and run with it, just one." +
+                "\r\n\t[X,Y,Z,...] = \t\tpowerset operator. two ways to use it: either the first item is in the form A-B where it will pick between A and B items from the list," +
+                "\r\n\t{GPTArtstyles} =\tthis will pick one of the ~450 artstyles hardcoded into the program. There are a ton of them from all over the world. The program has LOTS of aliases built in" +
+                "\r\nfor all kinds of different things. These are useful for forcing the program to get out of the normal vectors. But there are SO many ways to go, I'm still finding out more and more."+
+                "\r\n\tPrompt = \t\tYour text input from the command line. Or, you can edit the file OverridePrompt and run it that way so you can debug, step through etc." +
+                "\r\nor if you omit that, like in [tall,small], it will pick a random element of the powerset. reminder: powerset means ALL subsets, so everything from none of the items, to 1, to 2, ... to all of them." +
+                "\r\nNote that for powersets that is a LOT of images. 2^N where N is the number of items in the powerset. Also this is broken right now..." +
+                "\r\n by default outputs normal and annotated versions of images. If you want no normal do '-nonormal', if you want no annotated do '-noann'");
         }
 
         public static void Shuffle<T>(IList<T> list)
@@ -237,7 +246,7 @@ namespace Dalle3
             {
                 //okay from the range how many should we get.
                 //just make it linear even though that doesn't represent the actual probabilities inside.
-                var actualCount = min + Random.Next(max - min);
+                var actualCount = Random.Next(min, max + 1);
 
                 //put the index of every item in the original list (items)
                 var bitIndex = new List<short>();
@@ -251,7 +260,7 @@ namespace Dalle3
                 foreach (var index in bitIndex.Take(actualCount))
                 {
                     num |= 1 << index;
-                    //Console.WriteLine($"{Convert.ToString(num, 2)}/{Convert.ToString(1<<items.Count(), 2)}");
+                    //Console.WriteLine($"{Convert.ToString(num, 2)}\r\n{Convert.ToString(1<<items.Count(), 2)}");
                 }
             }
 
@@ -265,14 +274,16 @@ namespace Dalle3
         {
             while (true)
             {
-                //long ss = items.Count();
-                //if (ss > 62)
-                //{
-                //    throw new Exception("Too many items in the powerset. This is not supported.");
-                //}
+                long ss = items.Count();
+                if (ss > 62)
+                {
+                    throw new Exception("Too many items in the powerset. This is not supported.");
+                    //because of the way we do bit indexing. logically this actually can be fine but whatever.
+                    //and actualy, iterating through 2**63 items is not a good idea.
+                }
                 //long lastIndex = 1L << ss;
 
-                if (skip>0)
+                if (skip > 0)
                 {
                     var subset = new List<InternalTextSection>();
                     for (int ii = 0; ii < items.Count(); ii++)

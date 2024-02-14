@@ -58,7 +58,7 @@ namespace Dalle3.Infra
                     //" The images are extremely simple and basic" +
                     //"and minimalistic and have very few details and extraneous elements. Just the shapes and their elements."
                     //,
-                    "-h -r -hd -25 [3-7,a cat, a dog, lightning, lava, rainbows, double rainbows, meteors, cliffs, glaciers, kayakers, translucency, transcendence, lasers, the final battle,]",
+                    "-h -r -hd -25 [2-4,a cat, a dog, lightning, lava, rainbows, double rainbows, meteors, cliffs, glaciers, kayakers in foldable kayaks, explosions, peace, calm, joy, love, reconciliation, erosion, battle scars, scales, charizard, kaiju, 1970s music, 1930s fashion, translucency, Roblox, User-made mspaint recangular ads on Roblox, lasers, the final battle] in an amazing {GPTArtstyles} image",
                     
                 };
                 foreach (var prompt in prompts)

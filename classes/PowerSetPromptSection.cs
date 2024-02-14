@@ -51,9 +51,9 @@ namespace Dalle3
             }
             else
             {
-                con = $"with {Contents.Count()} items.";
+                con = $"with {Contents.Count()} parts";
             }
-            return $"PowerSetPromptSection:ew with {con} parts.";
+            return $"PowerSetPromptSection:{con}";
         }
     }
 }

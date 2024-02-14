@@ -18,6 +18,8 @@ using MetadataExtractor.Formats.Gif;
 using System.Threading;
 using MetadataExtractor.Formats.Exif.Makernotes;
 using Dalle3.Infra;
+using static System.Net.Mime.MediaTypeNames;
+using System.Globalization;
 
 namespace Dalle3
 {
@@ -107,9 +109,10 @@ namespace Dalle3
                 //var usingSubPrompt = Substitutions.SubstituteExpansionsIntoPrompt(subPrompt);
                 var textx = textSections.Select(el => el.L);
 
-                req.Prompt = string.Join(" ", textx).Replace(" ,", ",");
+                var tt = CultureInfo.CurrentCulture.TextInfo;
+                req.Prompt = tt.ToTitleCase(string.Join(" ", textx).Replace(" ,", ","));
                 req.Size = optionsModel.Size;
-                var humanReadable = string.Join("_", textSections.Select(el => el.GetValueForHumanConsumption()));
+                var humanReadable = string.Join("_", textSections.Select(el => el.GetValueForHumanConsumption())).Replace(',','_');
 
                 var l = req.Prompt.Length;
                 var displayedPromptLength = 100;

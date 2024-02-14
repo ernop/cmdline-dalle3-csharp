@@ -12,8 +12,7 @@ namespace Dalle3
 
         public IEnumerable<InternalTextSection> Sample()
         {
-            var el = Contents[Statics.Random.Next(0, Contents.Count)];
-            return new List<InternalTextSection>() { el};
+            return new List<InternalTextSection>() { Contents[Statics.Random.Next(0, Contents.Count + 1] };
         }
 
         public IEnumerable<InternalTextSection> Iterate()

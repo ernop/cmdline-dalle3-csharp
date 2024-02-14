@@ -155,6 +155,53 @@ namespace Dalle3
                 "Fighting Fantasy, Tunnels and Trolls, Monsters Monsters, TTRPG, " +
                 "EZD6, Index Card RPG, Dungeons of Drakkenheim");
 
+            var adjectives = new Alias("GPTArtstyles", "Aquarela brasileira, 3D, 3D model, 3D printing art, Abstract, Abstract geometry, Acrylic pour, Action painting, Aerial drone art, " +
+                "Ancient pottery techniques, Animación stop motion, Anime, Ansel Adams-like stark, Apocalyptic, Apocalyptic cityscape, Architectural model building, Arte cinético (Spanish)," +
+                "Arte conceptual (Spanish),Arte digital (Spanish),Arte povera (Italian), Arte mosaico bizantino, Arte quilling decorativo, Arte urbano graffiti, Augmented reality, " +
+                "Bamboo weaving, Baroque, Barro negro oaxaqueño, Basquiat-inspired street, Batik javanés, Bead weaving, Berniniesque dynamic, Bijutsu shashin (美術写真),Black velvet, " +
+                "Bioluminescent installation, Blackwork embroidery, Body painting, Bone carving, Book folding, Bordado punto cruz, Bordado suzani, Boschian fantastical, Botticellian grace, " +
+                "Brancusiesque simplified, Bruegelian detailed, Calado en madera, Caligrafía árabe, Calligraphic, Calligraphic graffiti fusion, Calligraphic lettering, Calligraphy, " +
+                "Candle crafting, Caravaggesque chiaroscuro, Cascading light display, Cerámica gres, Cerámica raku abstracta, Cestería mapuche, Chagallesque floating, Chainmaille fabric, " +
+                "Chalk street art, Chromatic sound waves, Cinematic virtual scenery, Clay animation storytelling, Clay pottery, Coffee art, Collage, Color-shifting mural art, Conceptual art," +
+                " Conceptual space exploration, Constable-inspired pastoral, Constructivist, Coral assemblage, Coral reef painting, Cosmic, Cosmic art, Cosmic photography, Courbet-like realism, " +
+                "Crackle glaze, Cubism, Cubist, Cubist figure, Cyanotype print, Cybernetic, Cybernetic organism, Cyberpunk, Cézannesque geometric, Da Vincian intricate, Dada, Daliesque surreal," +
+                " Danza butoh visual, Danza contemporánea (Spanish),contemporary dance., Deco, Deco elegance, Dibujo carboncillo expresivo, Digital 3D, Digital fabric weaving, Digital mosaic, " +
+                "Digital painting, Digital vector graphics, Dot painting, Dreamy, Dreamy landscape, Drybrush technique, Dystopian landscape sketch, Ebru sanatı, Eco, Eco-friendly sculpture, " +
+                "Eco-sculpture, Embroidered, Embroidered fabric, Embroidery, En plein air, Encaustic painting, Ephemeral sand portraits, Escheresque impossible, Escultura hielo luminoso," +
+                " Escultura reciclaje innovador, Estampa ukiyo-e, Ethereal, Ethereal glass sculpture, Ethereal vision, Experimental shadow theater, Expressionist, Fabric batik, Fauvist, " +
+                "Faux finish, Feather art, Felted wool landscapes, Fiber optic tapestry, Filigrana italiana, Fire ink drawing, Floral arrangement, Fluid art, Fluorescent body art, Folk, " +
+                "Folk embroidery, Food carving, Fotografía callejera monocromo, Fractal laser etching, Fresco, Fridaesque personal, Frottage (French),Futurist, Futuristic, Futuristic skyline, " +
+                "Galactic spray paint, Gauguinesque exotic, Geodesic dome mural, Geometric, Glacial, Glacial sculpture, Glass blowing, Glass etching, Glitch, Glowing ice sculpture, Gold leaf, " +
+                "Gothic, Gothic cathedral, Goyesque grotesque, Grabado linóleo detallado, Graffiti, Graffiti wall, Graffito, Gravura em madeira (Portuguese),Gyotaku fish print, Hand-dyed fabric art, " +
+                "Handmade paper making, Handwoven light patterns, Haptic VR art, Harmonic resonance sculpture, Haute couture (French),Highbrow, Highbrow, Highbrow critique, Hokusai-inspired wave, " +
+                "Holograph, Holographic, Holographic art, Holographic display, Holographic street art, Hopperesque solitude, Hyperbolic tessellation art, Hyperreal, Hyperrealism sketch, Ice, " +
+                "Ice carving, Ice sculpting, Ice sculpture, Iconografía bizantina, Ikebana (生け花),Mixed media collage, Ilustración digital fantasía, Immersive virtual reality, Impressionist, " +
+                "Ink brush, Ink wash, Instalación arte lumínico, Instalación artística (Spanish),Intaglio, Instalación sonido inmersivo, Interactive light installation, Interactive mural," +
+                " Interactive sidewalk chalk, Iridescent bubble art, Joyería artesanal étnica, Junk sculpture, Kahloesque vivid, Kalamkari indio, Kilning, Kinetic, Kinetic mobile, " +
+                "Kinetic sand drawing, Kinetic sculpture, Kinetic wind art, Kintsugi (金継ぎ),Kintsugi repair, Klimtesque ornate, Lace making, Lacquer, Land art, Large-scale mural painting," +
+                " Laser-cut paper art, Leather tooling, Levitating sculpture art, Light painting, Light projection, Linocut print, Liquid metal sculpture, Litho, Litho print, Lithograph, " +
+                "Lost wax casting, Lowbrow, Lowbrow humor, Luces y sombras (Spanish),lights and shadows., Luminous thread embroidery, Macabre, Macro photography, Magnetic fluid art, " +
+                "Magrittesque mysterious, Mandala design, Manetesque modern, Manga, Manga sketch, Marbling, Metal forging, Michelangelesque heroic, Miniature book binding, Miniature model," +
+                " Minimal, Minimal design, Minimalist, Mixed reality installation, Mokuhanga (木版画),Batik tulis (Indonesian),Céramique raku (French),Papiroflexia (Spanish),Arte callejero (Spanish)," +
+                "Joie de vivre (French),Sgraffito (Italian),Guóhuà (国画),traditional Chinese painting., Monetesque impressionist, Mosaic, Munchian angst, Mural, Mural street, Muralismo digital interactivo," +
+                " Muralismo mexicano (Spanish),Mexican muralism., Máscara veneciana, Natural landscape photography, Needle felting, Neon, Neon calligraphy, Neon portrait, Neon wireframe sculptures, " +
+                "Nihonga, Noir, Noir mystery, O'Keeffesque enlarged, Optical, Optical art, Optical illusion, Organic ceramic forms, Origami, Origami crane, Origami tessellation, Paisaje sonoro urbano, " +
+                "Panoramic digital fresco, Papel picado mexicano, Paper cutting, Paper mâché, Paper quilling, Papiroflexia modular avanzada, Parchment scroll, Pastel, Pastel drawing, Peinture abstraite (French)," +
+                "abstract painting., Peisaj urban (Romanian),urban landscape., Performance art, Performance teatro callejero, Perfume blending, Phosphorescent forest art, Photoreal, Pintura al fresco, " +
+                "Pintura al óleo (Spanish),Pyrography, Pintura sumi-e, Pintura óleo realista, Pirograbado ruso, Pixel, Pixel animation, Pixelated, Pixelated character, Pollock-style drip, Pop, Pop icon, Primitivism, " +
+                "Programmable matter sculpture, Proyección mapping dinámico, Psychedelic, Psychedelic swirl, Qi baishi (齐白石),Chinese ink painting style., Quantum dot canvas, Quilling art, Quilting, Quink art, Raku, Rakú japonés, " +
+                "Raphaelesque serene, Reactive sound mural," +
+                " Real-time animation projection, Recycled art, Relief carving, Relieve precolombino, Rembrandtesque dramatic, Resin art, Retro, Retro diner, Retrofuturism, " +
+                "Robotic arm painting, Rodinesque sculptural, Rothko-inspired abstract, Rubenesque voluptuous, Rustic, Rustic barn, Rustic pottery, Salt flat mirage, Salt painting, Sand, Sand animation, " +
+                "Sand castle, Sand mandala, Scented ink calligraphy, Scherenschnitte (German),Scrap metal sculpture, Seuratesque pointillist, Sgraffito, Sgraffito etching, Shadow art, Shadow play, Shell mosaic," +
+                " Shibori dyeing, Silhouette, Silhouette cutout, Silk embroidery, Site-specific performance art, Snow architecture, Soap sculpture, Solar plate etching, Solar reactive painting, Sound installation, Sound wave art, " +
+                "Sound-activated light art, Stained glass, Steampunk, Steampunk gadget, Stencil, Stenciled, Stenciled message, Stone masonry, Sumi-e ink, Surreal, Surreal dreamscape, Surrealist, " +
+                "Ta moko (Māori),traditional skin art., Talla piedra ancestral, Tape art, Tapestry, Tapestry weave, Tapiz flamenco, Tapiz mural contemporáneo, Tatuaje polinesio, Terrazzo flooring, Textile dyeing," +
+                " Thangka, Thermal imaging, Thermal reactive murals, Three-dimensional street art, Time-lapse drawing, Tinta china (Spanish),Chinese ink, Tissage africain, Titianesque vibrant, Toulouse-Lautrec-esque nightlife," +
+                " Traditional woodblock printing, Tribal, Tribal mask, Trompe l'oeil, Trompe-l'œil (French),Ukiyo-e, Turner-inspired atmospheric, Técnica collage mixto, Ultraviolet landscape art, Urban, Urban decay photography, " +
+                "Urban sketching, Urban sprawl, Van Goghian swirl, Vaporwave, Vaporwave scene, Vermeeresque light, Vexel illustration, Vintage photo restoration, Virtual sculpture, Vitrail, Vitraux gothique, Warholian pop, Watercolor," +
+                " Watercolor garden, Weaving, Wheatpaste poster, Wire sculpture, Wood carving, Woodblock, Woodblock print, Woodcut, Wool felting, Xylography, Yarn bombing, Yarnbomb, Zen, Zen garden, Zen garden design, Zentangle drawing");
+
             var backgrounds = new Alias("GPTBackgrounds",
                 "a barren grotto, a jungle clearing, a forest glen, a cliff temple, a riverine valley, a whitewater rapids, " +
                 "a boulder field, a portrait factory, a wood mill, a fantasy quarry, a crowded swimming pool, " +
@@ -348,6 +395,7 @@ namespace Dalle3
                     forts,
                     compositionTypes,
 
+                    adjectives,
                     ///These are for making set decks, and more function as simple terms to refer to variation beyond which we probably don't really need to see.
                     //new Alias("A", "A single letter \"A\""),
                     //new Alias("B", "A single letter \"B\""),
