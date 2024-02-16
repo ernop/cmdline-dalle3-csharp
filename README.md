@@ -1,3 +1,22 @@
+# Updated Usage
+
+Format------ 'Dalle3.exe [-N] [-r] [-h|v] [-hd] [prompt]'
+Example-------- 'Dalle3.exe A very {big,blue,tall} photo of a [tall,small] [1-2,cat,dog,mouse monster] i the stylue of {GPTArtstyles}'
+
+Explanation of terms:
+        N =                     number of times to repeat prompt. Will die if any fail. Prompt can be multiple words with no quotes required, but no newlines.
+        -r =                    output items in random order. default or missing, will output in permutation order. This applies to both permutations and powersets. So without -r you will iterate through all subsets in order.
+        -h|v =                  make image horizontal or vertical. the default is square.
+        -hd =                   make image in hd. The default is standard, and is cheaper.
+        {X,Y,Z,...} =           pick one of these and run with it, just one.
+        [X,Y,Z,...] =           powerset operator. two ways to use it: either the first item is in the form A-B where it will pick between A and B items from the list,
+        {GPTArtstyles} =        this will pick one of the ~450 artstyles hardcoded into the program. There are a ton of them from all over the world. The program has LOTS of aliases built in
+for all kinds of different things. These are useful for forcing the program to get out of the normal vectors. But there are SO many ways to go, I'm still finding out more and more.
+        Prompt =                Your text input from the command line. Or, you can edit the file OverridePrompt and run it that way so you can debug, step through etc.
+or if you omit that, like in [tall,small], it will pick a random element of the powerset. reminder: powerset means ALL subsets, so everything from none of the items, to 1, to 2, ... to all of them.
+Note that for powersets that is a LOT of images. 2^N where N is the number of items in the powerset. Also this is broken right now...
+ by default outputs normal and annotated versions of images. If you want no normal do '-nonormal', if you want no annotated do '-noann'
+
 # Todos
 * don't re-send repeatedly blocked prompts upstream, but make this configurable
 * show you how much each run is going to cost, including -h -hd etc.
