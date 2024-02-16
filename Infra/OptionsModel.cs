@@ -17,9 +17,9 @@ namespace Dalle3
         /// </summary>
         public bool Random { get; set; } = true; //this HAS to be true otherwise it breaks for now, fix this bug.
         public ImageSize Size { get; set; }
-        
+
         //hd, standard
-        public string Quality { get; set; } 
+        public string Quality { get; set; } = "standard";
 
     }
 

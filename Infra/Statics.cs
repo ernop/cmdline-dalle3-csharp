@@ -212,8 +212,7 @@ namespace Dalle3
                     align = "def";
                     break;
             }
-            var useQuality = req.Quality ?? "standard";
-            var outFn = $"{usePrompt.Trim().TrimEnd('_')}-{now.Year}{now.Month:00}{now.Day:00}-{useQuality}-{align}.png";
+            var outFn = $"{usePrompt.Trim().TrimEnd('_')}-{now.Year}{now.Month:00}{now.Day:00}-{req.Quality}-{align}.png";
 
             var tries = 0;
             while (true)

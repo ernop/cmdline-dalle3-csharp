@@ -54,7 +54,6 @@ namespace Dalle3
             var tasks = new List<Task>();
             var throttler = new SemaphoreSlim(10, 10);
 
-            var quality = "hd";
             var sz = ImageSize._1792x1024;
 
             //if n>1, and you also use curly brackets, then this
@@ -98,26 +97,26 @@ namespace Dalle3
                     ungroupedTextSections = optionsModel.PromptSections.ToList().Select(el => el.Iterate()).ToList();
                 }
                 var textSections = ungroupedTextSections
-                    .Select(el => new InternalTextSection(string.Join(",", el.Select(ee => ee.L)), string.Join(",", el.Select(ee => ee.L)), false, null));
+                    .Select(el => new InternalTextSection(string.Join(", ", el.Select(ee => ee.L)), string.Join(", ", el.Select(ee => ee.L)), false, null));
 
                 var req = new ImageGenerationRequest();
                 req.Model = OpenAI_API.Models.Model.DALLE3;
 
                 //the library magically returns null when the actual object is "standard" and you are using dalle3 for some reason.
                 //so fix it here for tracking.
-                req.Quality = quality ?? "standard";
+                req.Quality = optionsModel.Quality;
                 //var usingSubPrompt = Substitutions.SubstituteExpansionsIntoPrompt(subPrompt);
                 var textx = textSections.Select(el => el.L);
 
                 //var tt = CultureInfo.CurrentCulture.TextInfo;
                 //req.Prompt = tt.ToTitleCase(string.Join(" ", textx).Replace(" ,", ","));
-                req.Prompt = string.Join(" ", textx).Replace(" ,", ",").ToLowerInvariant();
+                req.Prompt = string.Join(" ", textx).Replace("  ,", " ,").ToLowerInvariant().Replace("  "," ");
                 req.Size = optionsModel.Size;
                 var humanReadable = string.Join("_", textSections.Select(el => el.GetValueForHumanConsumption())).Replace(',','_');
 
                 var l = req.Prompt.Length;
                 var displayedPromptLength = 100;
-                Statics.Logger.Log($"Sending to imagemaker:\t\"{req.Prompt.Substring(0, Math.Min(l, displayedPromptLength))}\"");
+                Statics.Logger.Log($"Sending:\t\"{req.Prompt.Substring(0, Math.Min(l, displayedPromptLength))}\"");
 
                 //during asyncification: actually, I was already doing things wrong, probably. This 
                 // method is actually where the exceptions were popping out of, but like 100% of the time, the path from here to the big try catch below
@@ -190,7 +189,7 @@ namespace Dalle3
                             }
                             else if (ex.InnerException.Message.Contains("invalid_request_error") && ex.InnerException.Message.Contains(" is too long - \'prompt\'"))
                             {
-                                Statics.Logger.Log($"Your prompt was {req.Prompt.Length} characters and it started: \"{req.Prompt.Substring(0, 30)}...\". This is too long. The actual limit is X.");
+                                Statics.Logger.Log($"Your prompt was {req.Prompt.Length} characters and it started: \"{req.Prompt.Substring(0, 30)}...\". This is too long. The actual limit is 4000.");
                                 System.IO.File.Delete(destFp);
                                 UpdateWithFilterResult(ungroupedTextSections, TextChoiceResultEnum.TooLong);
                             }
