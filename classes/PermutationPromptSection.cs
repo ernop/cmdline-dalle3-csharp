@@ -5,24 +5,40 @@ namespace Dalle3
 {
     public class PermutationPromptSection : MetaPromptSection, IPromptSection
     {
+        private int currentN { get; set; } = 0;
         public PermutationPromptSection(string s)
         {
             Setup(s, this);
         }
 
-        public IEnumerable<InternalTextSection> Sample()
+        public int GetCount()
         {
-            var num = Statics.Random.Next(0, Contents.Count);
-            return new List<InternalTextSection>() { Contents[num] };
+            return Contents.Count();
         }
 
-        public IEnumerable<InternalTextSection> Iterate()
+        public InternalTextSection Sample()
         {
-            foreach (var el in Contents)
+            var num = Statics.Random.Next(0, Contents.Count);
+            return Contents[num];
+        }
+
+        public InternalTextSection Next()
+        {
+            currentN++;
+            try
             {
-                yield return el;
+                return Contents[currentN - 1];
+            }
+            catch
+            {
+                throw new IterException(nameof(PermutationPromptSection));
             }
         }
+        public InternalTextSection Current()
+        {
+            return Contents[currentN - 1];
+        }
+
         public override string ToString()
         {
             return $"PermutationPromptSection:with {Contents.Count} parts.";

@@ -15,7 +15,7 @@ namespace Dalle3
         /// <summary>
         /// Random = sample randomly, this false means iterate in order.
         /// </summary>
-        public bool Random { get; set; } = true; //this HAS to be true otherwise it breaks for now, fix this bug.
+        public bool Random { get; set; } = false;
         public ImageSize Size { get; set; }
 
         //hd, standard

@@ -14,32 +14,53 @@ namespace Dalle3
     /// </summary>
     public class PowerSetPromptSection : MetaPromptSection, IPromptSection
     {
-        public int Min { get; set; } = 0;
-        public int Max { get; set; } = int.MaxValue;
+        public int MinToReturn { get; set; } = 0;
+        public int MaxToReturn { get; set; } = int.MaxValue;
         public PowerSetPromptSection(string s)
         {
             var rangeRe = new Regex(@"^(\d+)-(\d+),");
             var mm = rangeRe.Match(s);
             if (mm.Success)
             {
-                Min = int.Parse(mm.Groups[1].Value);
-                Max = int.Parse(mm.Groups[2].Value);
+                MinToReturn = int.Parse(mm.Groups[1].Value);
+                MaxToReturn = int.Parse(mm.Groups[2].Value);
                 s = rangeRe.Replace(s, "");
             }
             Setup(s, this);
         }
-
-        public IEnumerable<InternalTextSection> Sample()
+        public int GetCount()
         {
-            return Statics.PickRandomPowersetValue(Contents, Min, Max);
+            return Contents.Count();
         }
 
-        public IEnumerable<InternalTextSection> Iterate()
+        public InternalTextSection Sample()
         {
-            foreach (var el in Statics.IteratePowerSet(Contents))
+            var x = Statics.PickRandomPowersetValue(Contents, MinToReturn, MaxToReturn);
+            return x;
+        }
+
+        /// <summary>
+        /// fake iteration?
+        /// </summary>
+        private int currentN { get; set; } = 0;
+
+        public InternalTextSection Next()
+        {
+            currentN++;
+
+            try
             {
-                yield return el.First();
+                return Statics.GetNthPowersetValue(Contents, currentN - 1);
             }
+            catch
+            {
+                throw new IterException(nameof(PowerSetPromptSection));
+            }
+
+        }
+        public InternalTextSection Current()
+        {
+            return Statics.GetNthPowersetValue(Contents, currentN - 1);
         }
 
         public override string ToString()

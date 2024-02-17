@@ -1,8 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
+using System.Runtime.ConstrainedExecution;
+using System.Runtime.Remoting.Messaging;
 using System.Text;
 using System.Threading.Tasks;
+
+using XmpCore.Impl;
 
 namespace Dalle3.Infra
 {
@@ -58,10 +63,16 @@ namespace Dalle3.Infra
                     //" The images are extremely simple and basic" +
                     //"and minimalistic and have very few details and extraneous elements. Just the shapes and their elements."
                     //,
-                    "-h -r -hd -25 [2-4,a cat, a dog, lightning, lava, rainbows, double rainbows, meteors, cliffs, glaciers, kayakers in foldable kayaks, explosions, peace, calm, joy, love, reconciliation, erosion, battle scars, scales, charizard, kaiju, 1970s music, 1930s fashion, translucency, Roblox, User-made mspaint recangular ads on Roblox, lasers, the final battle] in an amazing {GPTArtstyles} image",
+                    //"-h -20 -r -hd A chonky mutant {cassowary,petroglyph,octopus} spaceship floating above the rainbow lightning" +
+                    //"surface of jupiter shooting cats eye lasers at aliens and floating and disturbing the wild red misty stone and dust rings in {GPTArtstyles}",
+                    //@"-h -10 -r -hd There was no possibility of taking a walk that day. We had been wandering, indeed, in the leafless shrubbery an hour in the morning; but since dinner (Mrs. Reed, when there was no company, dined early) the cold winter wind had brought with it clouds so sombre, and a rain so penetrating, that further outdoor exercise was now out of the question. I was glad of it: I never liked long walks, especially on chilly afternoons: dreadful to me was the coming home in the raw twilight, with nipped fingers and toes, and a heart saddened by the chidings of Bessie, the nurse, and humbled by the consciousness of my physical inferiority to Eliza, John, and Georgiana Reed. The said Eliza, John, and Georgiana were now clustered round their mama in the drawing-room: she lay reclined on a sofa by the fireside, and with her darlings about her(for the time neither quarrelling nor crying) looked perfectly happy.Me, she had dispensed from joining the group; saying, “She regretted to be under the necessity of keeping me at a distance; but that until she heard from Bessie, and could discover by her own observation, that I was endeavouring in good earnest to acquire a more sociable and childlike disposition, a more attractive and sprightly manner—something lighter, franker, more natural, as it were—she really must exclude me from privileges intended only for contented, happy, little children.” ",
+                    
+                    //@"-h -30 -hd Show a Vibrant and Saturated Color Palette scene where The image features highly saturated colors with a vivid range of hues that create a dynamic and energetic visual effect.Flat yet Dimensional Illustration: While the artwork employs flat color blocks and lacks heavy shading or gradient effects, there is a sense of depth and dimension achieved through layering and the use of perspective. This gives the scene a stylized, yet three-dimensional appearance. Synthetic and Geometric Forms: The image incorporates geometric shapes and forms, such as the perfect cubes in the sky and the stylized, rounded trees. These elements contribute to a sense of an artificial or constructed world.  The colors are intense and rich, contributing to the overall dream-like atmosphere. Draw an epic scene from each of the following video game roblox games as a movie { Watermelon Go | Squid game | Tiny Tanks | Cube Eat Cube | Natural Disaster Survival | Factorio | Catalog Heaven | Trade Hangout | Grass Cutting Tycoon | Bee swarm Simulator | Egg Hunt }"
+                    @"a large {red, blue, unusual, fragrant, perfumed} hat",
                 };
                 foreach (var prompt in prompts)
                 {
+                    Console.WriteLine(prompt);
                     yield return prompt;
                 }
             }

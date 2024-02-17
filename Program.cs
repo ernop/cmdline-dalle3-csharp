@@ -37,9 +37,15 @@ namespace Dalle3
 
             if (locl && (args.Length == 0))
             {
-                foreach (var aa in OverridePrompts.OverridePromptsForTesting)
+                foreach (var argset in OverridePrompts.OverridePromptsForTesting)
                 {
-                    await AsyncMain(aa.Split(' '));
+                    if (argset.Length == 0)
+                    {
+                        Console.WriteLine($"You triggered the help display by not submitting any arguments, so printing it and quitting.");
+                        Usage();
+                        Environment.Exit(0);
+                    }
+                    await AsyncMain(argset.Split(' '));
                 }
             }
             else
@@ -60,13 +66,6 @@ namespace Dalle3
             //will make us skip the failed bad prompts, but not skip the 
             //other ones in the group which might actually be okay.
 
-            if (args.Length == 0)
-            {
-                Console.WriteLine($"You triggered the help display by not submitting any arguments, so printing it and quitting.");
-                Usage();
-                Environment.Exit(0);
-            }
-
             var optionsModel = Statics.Parse(args);
             if (optionsModel == null)
             {
@@ -85,19 +84,27 @@ namespace Dalle3
                 await throttler.WaitAsync();
 
                 var taskId = ii + 10000;
-                IEnumerable<IEnumerable<InternalTextSection>> ungroupedTextSections;
+                IEnumerable<InternalTextSection> textSections;
                 //we do this so we can track the results of each individual section by punishing them later if there is a rejection..
 
                 if (optionsModel.Random)
                 {
-                    ungroupedTextSections = optionsModel.PromptSections.ToList().Select(el => el.Sample()).ToList();
+                    textSections = optionsModel.PromptSections.Select(el => el.Sample()).ToList();
                 }
                 else
                 {
-                    ungroupedTextSections = optionsModel.PromptSections.ToList().Select(el => el.Iterate()).ToList();
+                    try
+                    {
+                        textSections = optionsModel.PromptSections.Select(el => el.Next()).ToList();
+                    }
+                    catch (IterException ex)
+                    {
+                        Statics.Logger.Log($"One of the iterators ran out. System currently doesn't support more than a single instance of powerset or permutation section in non-random mode, since" +
+                            $"we don't lockstep iterate, but rather just advance them all at once. {ex}");
+                        break;
+                    }
+
                 }
-                var textSections = ungroupedTextSections
-                    .Select(el => new InternalTextSection(string.Join(", ", el.Select(ee => ee.L)), string.Join(", ", el.Select(ee => ee.L)), false, null));
 
                 var req = new ImageGenerationRequest();
                 req.Model = OpenAI_API.Models.Model.DALLE3;
@@ -110,9 +117,9 @@ namespace Dalle3
 
                 //var tt = CultureInfo.CurrentCulture.TextInfo;
                 //req.Prompt = tt.ToTitleCase(string.Join(" ", textx).Replace(" ,", ","));
-                req.Prompt = string.Join(" ", textx).Replace("  ,", " ,").ToLowerInvariant().Replace("  "," ");
+                req.Prompt = string.Join(" ", textx).Replace("\r\n", " ").Replace("  ,", " ,").ToLowerInvariant().Replace("  ", " ");
                 req.Size = optionsModel.Size;
-                var humanReadable = string.Join("_", textSections.Select(el => el.GetValueForHumanConsumption())).Replace(',','_');
+                var humanReadable = string.Join("_", textSections.Select(el => el.GetValueForHumanConsumption())).Replace(',', '_');
 
                 var l = req.Prompt.Length;
                 var displayedPromptLength = 100;
@@ -145,7 +152,7 @@ namespace Dalle3
                         {
                             //client.DownloadProgressChanged += (sender, e) => DownloadProgressHappened(sender, e, tempFp, fp, req.Prompt);
                             client.DownloadFileCompleted +=
-                                (sender, e) => DownloadCompleted(sender, e, tempFp, destFp, req.Prompt, ungroupedTextSections);
+                                (sender, e) => DownloadCompleted(sender, e, tempFp, destFp, req.Prompt, textSections);
                             client.DownloadFileAsync(new Uri(res.Result.Data[0].Url), tempFp);
                         }
 
@@ -156,28 +163,28 @@ namespace Dalle3
                             {
                                 Statics.Logger.Log($"Prompt rejection.\t\"{req.Prompt}\"");
                                 System.IO.File.Delete(destFp);
-                                UpdateWithFilterResult(ungroupedTextSections, TextChoiceResultEnum.PromptRejected);
+                                UpdateWithFilterResult(textSections, TextChoiceResultEnum.PromptRejected);
                                 await Task.Delay(2 * 1000);
                             }
                             else if (ex.InnerException.Message.Contains("Your request was rejected as a result of our safety system. Image descriptions generated from your prompt may contain text that is not allowed by our safety system. If you believe this was done in error, your request may succeed if retried, or by adjusting your prompt."))
                             {
                                 Statics.Logger.Log($"Image descriptions from output were bad.\t\"{req.Prompt}\"");
                                 System.IO.File.Delete(destFp);
-                                UpdateWithFilterResult(ungroupedTextSections, TextChoiceResultEnum.DescriptionsBad);
+                                UpdateWithFilterResult(textSections, TextChoiceResultEnum.DescriptionsBad);
                                 await Task.Delay(2 * 1000);
                             }
                             else if (ex.InnerException.Message.Contains("This request has been blocked by our content filters."))
                             {
                                 Statics.Logger.Log($"Content filter block.\t\"{req.Prompt}\"");
                                 System.IO.File.Delete(destFp);
-                                UpdateWithFilterResult(ungroupedTextSections, TextChoiceResultEnum.RequestBlocked);
+                                UpdateWithFilterResult(textSections, TextChoiceResultEnum.RequestBlocked);
                                 await Task.Delay(2 * 1000);
                             }
                             else if (ex.InnerException.Message.Contains("\"Rate limit exceeded for images per minute in organization"))
                             {
                                 var sleepTime = 10;
                                 Statics.Logger.Log($"{ex.InnerException.Message}  sleep for: {sleepTime}s");
-                                //UpdateWithFilterResult(ungroupedTextSections, TextChoiceResultEnum.RateLimit);
+                                //UpdateWithFilterResult(textSections, TextChoiceResultEnum.RateLimit);
                                 System.IO.File.Delete(destFp);
                                 await Task.Delay(sleepTime * 1000);
                             }
@@ -185,20 +192,20 @@ namespace Dalle3
                             {
                                 Statics.Logger.Log(ex.InnerException.Message);
                                 System.IO.File.Delete(destFp);
-                                UpdateWithFilterResult(ungroupedTextSections, TextChoiceResultEnum.BillingLimit);
+                                UpdateWithFilterResult(textSections, TextChoiceResultEnum.BillingLimit);
                             }
                             else if (ex.InnerException.Message.Contains("invalid_request_error") && ex.InnerException.Message.Contains(" is too long - \'prompt\'"))
                             {
                                 Statics.Logger.Log($"Your prompt was {req.Prompt.Length} characters and it started: \"{req.Prompt.Substring(0, 30)}...\". This is too long. The actual limit is 4000.");
                                 System.IO.File.Delete(destFp);
-                                UpdateWithFilterResult(ungroupedTextSections, TextChoiceResultEnum.TooLong);
+                                UpdateWithFilterResult(textSections, TextChoiceResultEnum.TooLong);
                             }
                             else if (ex.InnerException.Message.Contains("Rate limit repeatedly exceeded"))
                             {
                                 Statics.Logger.Log($"You blew up the rate limit unfortunately.");
                                 Statics.Logger.Log($"{GetMessageLine(ex.InnerException.Message)}");
                                 System.IO.File.Delete(destFp);
-                                UpdateWithFilterResult(ungroupedTextSections, TextChoiceResultEnum.RateLimitRepeatedlyExceeded);
+                                UpdateWithFilterResult(textSections, TextChoiceResultEnum.RateLimitRepeatedlyExceeded);
                             }
                             else
                             {
@@ -282,7 +289,7 @@ namespace Dalle3
         //3. we also delay creating the unique filename.
         //4. also save an annotated version?
         private static void DownloadCompleted(object sender, AsyncCompletedEventArgs e, string srcFp, string destFp,
-            string prompt, IEnumerable<IEnumerable<InternalTextSection>> ungroupedTextSections)
+            string prompt, IEnumerable<InternalTextSection> ungroupedTextSections)
         {
             try
             {

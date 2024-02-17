@@ -13,15 +13,16 @@ namespace Dalle3
         {
             S = new InternalTextSection(s, s, true, this);
         }
+        public int GetCount() => 1;
+        public InternalTextSection Sample() => S;
 
-        public IEnumerable<InternalTextSection> Sample() => new List<InternalTextSection>() { S };
-
-        public IEnumerable<InternalTextSection> Iterate()
+        public InternalTextSection Next()
         {
-            while (true)
-            {
-                yield return S;
-            }
+            return S;
+        }
+        public InternalTextSection Current()
+        {
+            return S;
         }
 
         public void ReceiveChoiceResult(string choice, TextChoiceResultEnum result)
@@ -75,5 +76,6 @@ namespace Dalle3
         {
             return $"TextPromptSection:{S}";
         }
+
     }
 }

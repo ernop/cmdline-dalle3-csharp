@@ -9,12 +9,14 @@ namespace Dalle3
         /// <summary>
         /// Pick a random value from the set of possible values.
         /// </summary>
-        IEnumerable<InternalTextSection> Sample();
+        InternalTextSection Sample();
 
         /// <summary>
-        /// Iterate over all possible values.
+        /// Next over all possible values.
         /// </summary>
-        IEnumerable<InternalTextSection> Iterate();
+        InternalTextSection Next();
+        InternalTextSection Current();
+        int GetCount();
 
         /// <summary>
         /// For tracking failures by choices etc.

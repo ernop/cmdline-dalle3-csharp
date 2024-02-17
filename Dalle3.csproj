@@ -76,6 +76,7 @@
     <Compile Include="Infra\Parser.cs" />
     <Compile Include="classes\PermutationPromptSection.cs" />
     <Compile Include="classes\PowerSetPromptSection.cs" />
+    <Compile Include="IterException.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Infra\Statics.cs" />

@@ -62,7 +62,7 @@ namespace Dalle3
                 "\r\n\t{X,Y,Z,...} =\t\tpick one of these and run with it, just one." +
                 "\r\n\t[X,Y,Z,...] = \t\tpowerset operator. two ways to use it: either the first item is in the form A-B where it will pick between A and B items from the list," +
                 "\r\n\t{GPTArtstyles} =\tthis will pick one of the ~450 artstyles hardcoded into the program. There are a ton of them from all over the world. The program has LOTS of aliases built in" +
-                "\r\nfor all kinds of different things. These are useful for forcing the program to get out of the normal vectors. But there are SO many ways to go, I'm still finding out more and more."+
+                "\r\nfor all kinds of different things. These are useful for forcing the program to get out of the normal vectors. But there are SO many ways to go, I'm still finding out more and more." +
                 "\r\n\tPrompt = \t\tYour text input from the command line. Or, you can edit the file OverridePrompt and run it that way so you can debug, step through etc." +
                 "\r\nor if you omit that, like in [tall,small], it will pick a random element of the powerset. reminder: powerset means ALL subsets, so everything from none of the items, to 1, to 2, ... to all of them." +
                 "\r\nNote that for powersets that is a LOT of images. 2^N where N is the number of items in the powerset. Also this is broken right now..." +
@@ -176,6 +176,20 @@ namespace Dalle3
             //the first char of the chunk is the pointer for who should parse it into an IPromptSection, and we remove the last char.
 
             optionsModel.PromptSections = Parser.ParseInput(usingRawPrompt);
+            var max = 1;
+            if (!optionsModel.Random)
+            {
+                foreach (var ps in optionsModel.PromptSections)
+                {
+                    max = Math.Max(max, ps.GetCount());
+                    var n = Math.Min(10, max);
+                    if (n != optionsModel.ImageNumber)
+                    {
+                        Statics.Logger.Log($"Set {optionsModel.ImageNumber} to generate {n} images");
+                        optionsModel.ImageNumber = n;
+                    }
+                }
+            }
             return optionsModel;
         }
 
@@ -232,98 +246,32 @@ namespace Dalle3
             }
         }
 
-        public static IEnumerable<InternalTextSection> PickRandomPowersetValue(IEnumerable<InternalTextSection> items, int min, int max)
+        public static InternalTextSection PickRandomPowersetValue(IEnumerable<InternalTextSection> items, int minToReturn, int maxToReturn)
         {
-            //rather than messing around with the pure iterator, better just make a 
-            //bit vector into it which is better.
-            int num = 0;
-            if (min == 0 && max == int.MaxValue)
-            {
-                num = Random.Next(0, 1 << items.Count());
-            }
-            else
-            {
-                //okay from the range how many should we get.
-                //just make it linear even though that doesn't represent the actual probabilities inside.
-                var actualCount = Random.Next(min, max + 1);
-
-                //put the index of every item in the original list (items)
-                var bitIndex = new List<short>();
-                for (short ii = 0; ii < items.Count(); ii++)
-                {
-                    bitIndex.Add(ii);
-                }
-
-                Statics.Shuffle(bitIndex);
-                //Console.WriteLine($"Trying to return an int with: {actualCount} bits");
-                foreach (var index in bitIndex.Take(actualCount))
-                {
-                    num |= 1 << index;
-                    //Console.WriteLine($"{Convert.ToString(num, 2)}\r\n{Convert.ToString(1<<items.Count(), 2)}");
-                }
-            }
-
-            var raw = IteratePowerSet(items, num, true);
-            var el = raw.First();
-            return el;
+            var actualNumberOfValuesToReturn = Random.Next(minToReturn, maxToReturn + 1);
+            var res = GetNthPowersetValue(items, actualNumberOfValuesToReturn);
+            return res;
         }
 
-        public static IEnumerable<IEnumerable<InternalTextSection>> IteratePowerSet(IEnumerable<InternalTextSection> items,
-             int skip = 0, bool randomize = false)
+        public static InternalTextSection GetNthPowersetValue(IEnumerable<InternalTextSection> items, int actualNumberOfValuesToReturn)
         {
-            while (true)
+            var subset = new List<InternalTextSection>();
+            var indices = new List<int>();
+            for (int jj = 0; jj < items.Count(); jj++)
             {
-                long ss = items.Count();
-                if (ss > 62)
-                {
-                    throw new Exception("Too many items in the powerset. This is not supported.");
-                    //because of the way we do bit indexing. logically this actually can be fine but whatever.
-                    //and actualy, iterating through 2**63 items is not a good idea.
-                }
-                //long lastIndex = 1L << ss;
-
-                if (skip > 0)
-                {
-                    var subset = new List<InternalTextSection>();
-                    for (int ii = 0; ii < items.Count(); ii++)
-                    {
-                        if ((skip & (1 << ii)) != 0)
-                        {
-                            subset.Add(items.Skip(ii).First());
-                        }
-                    }
-
-                    if (randomize)
-                    {
-                        subset = subset.OrderBy(el => Statics.Random.Next()).ToList();
-                    }
-
-                    yield return subset;
-                }
-                else
-                {
-                    var lastIndex = 1L << items.Count();
-                    //just iterate through all the items.
-                    for (long index = skip; index < lastIndex; index++)
-                    {
-                        var subset = new List<InternalTextSection>();
-                        for (int ii = 0; ii < items.Count(); ii++)
-                        {
-                            if ((index & (1 << ii)) != 0)
-                            {
-                                subset.Add(items.Skip(ii).First());
-                            }
-                        }
-
-                        if (randomize)
-                        {
-                            subset = subset.OrderBy(el => Statics.Random.Next()).ToList();
-                        }
-
-                        yield return subset;
-                    }
-                }
+                indices.Add(jj);
             }
+
+            Statics.Shuffle(indices);
+
+            for (int ii = 0; ii < actualNumberOfValuesToReturn; ii++)
+            {
+                subset.Add(items.Skip(indices[ii]).First());
+            }
+
+            var joined = string.Join(",", subset.Select(el => el.L));
+            var its = new InternalTextSection(joined, joined, false, null);
+            return its;
         }
 
         /// <summary>
@@ -342,19 +290,16 @@ namespace Dalle3
             return res;
         }
 
-        public static void UpdateWithFilterResult(IEnumerable<IEnumerable<InternalTextSection>> ungroupedSections, TextChoiceResultEnum el)
+        public static void UpdateWithFilterResult(IEnumerable<InternalTextSection> ungroupedSections, TextChoiceResultEnum el)
         {
             ///So for example a powerset of [a,b,c] might send (a,c) here.
             foreach (var section in ungroupedSections)
             {
-                foreach (var p in section)
+                if (section.Parent == null)
                 {
-                    if (p.Parent == null)
-                    {
-                        continue;
-                    }
-                    p.Parent.ReceiveChoiceResult(p.S, el); ;
+                    continue;
                 }
+                section.Parent.ReceiveChoiceResult(section.S, el); ;
             }
         }
     }
