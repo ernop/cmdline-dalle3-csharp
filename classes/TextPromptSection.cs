@@ -25,7 +25,7 @@ namespace Dalle3
             return S;
         }
 
-        public void ReceiveChoiceResult(string choice, TextChoiceResultEnum result)
+        public void ReceiveChoiceResult(InternalTextSection section, TextChoiceResultEnum result)
         {
             //Console.WriteLine($"I am a thingie and for \"{choice.Substring(0,20)}...\" I got {result}");
             switch (result)
@@ -63,11 +63,12 @@ namespace Dalle3
             var res = $"\t{S.L}";
             if (GoodCount == 0 && BadCount == 0)
             {
-                res += " - None yet.";
+                res += "";
             }
             else
             {
-                res += $"\t{(100 * BadCount / (1.0 * BadCount + GoodCount)):0.0}b%. (b: {BadCount}, g: {GoodCount})";
+                res += $"\t{(100 * BadCount / (1.0 * BadCount + GoodCount)):0.0}b%. (b: {BadCount}, g: {GoodCount}) Do you actually need this? its a static text section.";
+                res = $"\t{S.L}";
             }
             return res;
         }

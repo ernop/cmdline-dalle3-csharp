@@ -183,7 +183,7 @@ namespace Dalle3
                 {
                     max = Math.Max(max, ps.GetCount());
                     var n = Math.Min(10, max);
-                    if (n != optionsModel.ImageNumber)
+                    if (n > optionsModel.ImageNumber)
                     {
                         Statics.Logger.Log($"Set {optionsModel.ImageNumber} to generate {n} images");
                         optionsModel.ImageNumber = n;
@@ -299,7 +299,7 @@ namespace Dalle3
                 {
                     continue;
                 }
-                section.Parent.ReceiveChoiceResult(section.S, el); ;
+                section.Parent.ReceiveChoiceResult(section, el); ;
             }
         }
     }

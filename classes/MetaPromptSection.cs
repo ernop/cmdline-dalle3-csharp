@@ -45,38 +45,38 @@ namespace Dalle3
             }
         }
 
-        public void ReceiveChoiceResult(string choice, TextChoiceResultEnum result)
+        public void ReceiveChoiceResult(InternalTextSection section, TextChoiceResultEnum result)
         {
             //okay, for the powerset case this isn't working yet.
             //i need to reconstruct which of the original internalTextSections were included.
             //given that there are limitations, that is possible, but seems wrong.
 
             //Console.WriteLine($"I am a thingie and for {choice} I got {result}");
-            if (!GoodCounts.ContainsKey(choice))
+            if (!GoodCounts.ContainsKey(section.L))
             {
-                GoodCounts[choice] = 0;
+                GoodCounts[section.L] = 0;
             }
-            if (!BadCounts.ContainsKey(choice))
+            if (!BadCounts.ContainsKey(section.L))
             {
-                BadCounts[choice] = 0;
+                BadCounts[section.L] = 0;
             }
             switch (result)
             {
                 case TextChoiceResultEnum.RequestBlocked:
                     BadCount++;
-                    BadCounts[choice]++;
+                    BadCounts[section.L]++;
                     break;
                 case TextChoiceResultEnum.PromptRejected:
                     BadCount++;
-                    BadCounts[choice]++;
+                    BadCounts[section.L]++;
                     break;
                 case TextChoiceResultEnum.DescriptionsBad:
                     BadCount++;
-                    BadCounts[choice]++;
+                    BadCounts[section.L]++;
                     break;
                 case TextChoiceResultEnum.Okay:
                     GoodCount++;
-                    GoodCounts[choice]++;
+                    GoodCounts[section.L]++;
                     break;
                 case TextChoiceResultEnum.RateLimit:
                     break;
@@ -102,28 +102,26 @@ namespace Dalle3
             }
             else
             {
-                res += $"Overall: {(100.0 * BadCount / (1.0*BadCount + GoodCount)):0.0}b% (b:{BadCount} g: {GoodCount})";
-                var keys = GoodCounts.Keys.ToList();
-                keys.AddRange(BadCounts.Keys);
-                var reorder = new List<Tuple<int, string>>();
-                foreach (var key in keys.Distinct())
+                res += $"Overall: {(100.0 * BadCount / (1.0 * BadCount + GoodCount)):0.0}b% (b:{BadCount} g: {GoodCount})";
+                var reorder = new List<Tuple<int, InternalTextSection>>();
+                foreach (var content in Contents)
                 {
-                    var bk = BadCounts[key];
-                    var gk = GoodCounts[key];
+                    int bk = 0;int gk = 0;
+                    var gotBad = BadCounts.TryGetValue(content.L, out bk);
+                    var gotGood = GoodCounts.TryGetValue(content.L, out gk);
                     if (bk + gk > 0)
                     {
-                        var perc = 100.0 * bk / (1.0 * bk + gk);
-                        //res += $"\r\n\t\t{perc:0.0}b%\t{key}";
-                        reorder.Add(new Tuple<int, string>((int)perc, key));
+                        var perc = 100.0 * bk / (bk + gk);
+                        reorder.Add(new Tuple<int, InternalTextSection>((int)perc, content));
                     }
                     else
                     {
-                        reorder.Add(new Tuple<int, string>((int)0, key));
+                        reorder.Add(new Tuple<int, InternalTextSection>((int)0, content));
                     }
                 }
                 foreach (var tuple in reorder.OrderByDescending(el => el.Item1))
                 {
-                    res += $"\r\n\t\t{tuple.Item1:0.0}b%\t{tuple.Item2} ({BadCounts[tuple.Item2] + GoodCounts[tuple.Item2]})";
+                    res += $"\r\n\t\t{tuple.Item1:0.0}b%\t{tuple.Item2} ";//({BadCounts[tuple.Item2.L] + GoodCounts[tuple.Item2.L]})
                 }
             }
             return res;

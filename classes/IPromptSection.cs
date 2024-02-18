@@ -21,7 +21,7 @@ namespace Dalle3
         /// <summary>
         /// For tracking failures by choices etc.
         /// </summary>
-        void ReceiveChoiceResult(string choice, TextChoiceResultEnum result);
+        void ReceiveChoiceResult(InternalTextSection section, TextChoiceResultEnum result);
 
         /// <summary>
         /// Outputting basic content filtering, etc. types of things.
