@@ -50,7 +50,15 @@ namespace Dalle3
             }
             else
             {
-                await AsyncMain(args);
+                if (args[0] == "-lookup")
+                {
+                    //do lookup of what is in the image?
+                    var a = 4;
+                }
+                else
+                {
+                    await AsyncMain(args);
+                }
             }
             Console.ReadLine();
         }
@@ -117,7 +125,7 @@ namespace Dalle3
 
                 //var tt = CultureInfo.CurrentCulture.TextInfo;
                 //req.Prompt = tt.ToTitleCase(string.Join(" ", textx).Replace(" ,", ","));
-                req.Prompt = string.Join(" ", textx).Replace("\r\n", " ").Replace("  ,", " ,").ToLowerInvariant().Replace("  ", " ");
+                req.Prompt = string.Join(" ", textx).Replace("\r\n", " ").Replace("  ,", " ,").Replace("  ", " "); //.ToLowerInvariant()
                 req.Size = optionsModel.Size;
                 var humanReadable = string.Join("_", textSections.Select(el => el.GetValueForHumanConsumption())).Replace(',', '_');
 
@@ -168,7 +176,7 @@ namespace Dalle3
                             }
                             else if (ex.InnerException.Message.Contains("Your request was rejected as a result of our safety system. Image descriptions generated from your prompt may contain text that is not allowed by our safety system. If you believe this was done in error, your request may succeed if retried, or by adjusting your prompt."))
                             {
-                                Statics.Logger.Log($"Image descriptions from output were bad.\t\"{req.Prompt}\"");
+                                Statics.Logger.Log($"Regenerated internal prompt had non-allowed text.\t\"{req.Prompt}\"");
                                 System.IO.File.Delete(destFp);
                                 UpdateWithFilterResult(textSections, TextChoiceResultEnum.DescriptionsBad);
                                 await Task.Delay(2 * 1000);
@@ -233,22 +241,22 @@ namespace Dalle3
             Statics.Logger.Log("Got to end, waiting. =================.");
 
             var last = 0;
-            while (true)
-            {
-                Statics.Logger.Log($"\tDownloaded:{DownloadedCount}, Requested:{RequestedCount}, Errored:{ErrorCount}");
-                Statics.Logger.Log("======Intermediate report =================.");
-                foreach (var el in optionsModel.PromptSections)
-                {
-                    Statics.Logger.Log(el.ReportResults());
-                }
+            //while (true)
+            //{
+            //    Statics.Logger.Log($"\tDownloaded:{DownloadedCount}, Requested:{RequestedCount}, Errored:{ErrorCount}");
+            //    Statics.Logger.Log("======Intermediate report =================.");
+            //    foreach (var el in optionsModel.PromptSections)
+            //    {
+            //        Statics.Logger.Log(el.ReportResults());
+            //    }
 
-                if (RequestedCount <= DownloadedCount + ErrorCount)
-                {
-                    break;
-                }
+            //    if (RequestedCount <= DownloadedCount + ErrorCount)
+            //    {
+            //        break;
+            //    }
 
-                await Task.Delay(6000);
-            }
+            //    await Task.Delay(6000);
+            //}
             await Task.WhenAll(tasks);
             Statics.Logger.Log("======done with WhenALL. =================.");
             Statics.Logger.Log("======Final Report=================.");

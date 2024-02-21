@@ -76,17 +76,15 @@ public class Annotator
     /// </summary>
     public async Task<string> Annotate(string srcFp, string destFp, string text, bool includeSourceLabel)
     {
-        var inputImageToAnnotate = Image.FromFile(srcFp);
-        Size outputSize;
-
         var outputOffsetX = 0;
+        var sourceLabelExtraYPixels = 0;
 
+        var inputImageToAnnotate = Image.FromFile(srcFp);
+        var outputSize = inputImageToAnnotate.Size;
         var originalImageYHeightPixels = inputImageToAnnotate.Height;
-        outputSize = inputImageToAnnotate.Size;
 
         var lines = GetTextInLines(text, outputSize.Width);
 
-        var sourceLabelExtraYPixels = 0;
         if (includeSourceLabel)
         {
             sourceLabelExtraYPixels = LineSize / 2 + 20;
@@ -107,7 +105,7 @@ public class Annotator
         var ii = 0;
         foreach (var line in lines)
         {
-            var pos = (float)Math.Floor((double)(originalImageYHeightPixels + sourceLabelExtraYPixels / 2 + ii * LineSize));
+            var pos = (float)Math.Floor((double)(originalImageYHeightPixels + ii * LineSize));
             graphics.DrawString(line, Font, brush, new PointF(0, pos));
 
             ii += 1;
@@ -117,7 +115,7 @@ public class Annotator
         {
             //add my watermarking etc here.  Slightly annoying since to be perfect I should maybe calculate the remaining Y space left for my small annotation?
             //But that's annoying. Rather just add 10pix or so to the bottom by default and fill mine in there.
-            var labelPos = (float)Math.Floor((double)(originalImageYHeightPixels + lines.Count * LineSize + 2));
+            var labelPos = (float)Math.Floor((double)(originalImageYHeightPixels + lines.Count * LineSize + 2 + sourceLabelExtraYPixels));
 
             var myFixedText = "Dalle3-cmdline";
             var w = FakeGraphics.MeasureString(myFixedText, LabelFont);
