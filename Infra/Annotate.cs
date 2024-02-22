@@ -115,9 +115,9 @@ public class Annotator
         {
             //add my watermarking etc here.  Slightly annoying since to be perfect I should maybe calculate the remaining Y space left for my small annotation?
             //But that's annoying. Rather just add 10pix or so to the bottom by default and fill mine in there.
-            var labelPos = (float)Math.Floor((double)(originalImageYHeightPixels + lines.Count * LineSize + 2 + sourceLabelExtraYPixels));
+            var labelPos = (float)Math.Floor((double)(originalImageYHeightPixels + (lines.Count -1)* LineSize + 2 + sourceLabelExtraYPixels));
 
-            var myFixedText = "Dalle3-cmdline";
+            var myFixedText = "dalle3-cmdline-csharp";
             var w = FakeGraphics.MeasureString(myFixedText, LabelFont);
             var p = new PointF(im.Width - w.Width - 4, labelPos);
             var verDarkGrey = Color.FromArgb(255, 36, 36, 36);

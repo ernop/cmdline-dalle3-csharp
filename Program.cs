@@ -3,23 +3,15 @@
 using System;
 using System.Collections.Generic;
 using System.Net;
-using System.Text;
-using CommandLine;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using System.CodeDom.Compiler;
 using System.Linq;
 using static Dalle3.Statics;
 
 using System.ComponentModel;
 using System.IO;
-using System.Diagnostics.Eventing.Reader;
-using MetadataExtractor.Formats.Gif;
+
 using System.Threading;
-using MetadataExtractor.Formats.Exif.Makernotes;
 using Dalle3.Infra;
-using static System.Net.Mime.MediaTypeNames;
-using System.Globalization;
 
 namespace Dalle3
 {
@@ -159,9 +151,14 @@ namespace Dalle3
                         try
                         {
                             //client.DownloadProgressChanged += (sender, e) => DownloadProgressHappened(sender, e, tempFp, fp, req.Prompt);
+
+                            var url = res.Result.Data[0].Url;
+                            var revisedPrompt = res.Result.Data[0].RevisedPrompt;
+
                             client.DownloadFileCompleted +=
-                                (sender, e) => DownloadCompleted(sender, e, tempFp, destFp, req.Prompt, textSections);
-                            client.DownloadFileAsync(new Uri(res.Result.Data[0].Url), tempFp);
+                                (sender, e) => DownloadCompleted(sender, e, tempFp, destFp, req.Prompt, revisedPrompt, textSections);
+
+                            client.DownloadFileAsync(new Uri(url), tempFp);
                         }
 
                         catch (Exception ex)
@@ -297,7 +294,7 @@ namespace Dalle3
         //3. we also delay creating the unique filename.
         //4. also save an annotated version?
         private static void DownloadCompleted(object sender, AsyncCompletedEventArgs e, string srcFp, string destFp,
-            string prompt, IEnumerable<InternalTextSection> ungroupedTextSections)
+            string prompt, string revisedPrompt, IEnumerable<InternalTextSection> ungroupedTextSections)
         {
             try
             {
@@ -317,7 +314,6 @@ namespace Dalle3
                     System.IO.File.Copy(srcFp, destFp, true);
                     System.IO.File.Delete(srcFp);
                     DownloadedCount++;
-
                 }
                 catch (System.IO.FileNotFoundException ex)
                 {
@@ -356,7 +352,13 @@ namespace Dalle3
                 var filename = Path.GetFileName(annotatedFp);
                 annotatedFp = directory + "/annotated/" + filename;
 
-                ann.Annotate(destFp, annotatedFp, prompt, true);
+                var combined = prompt;
+                if (!string.IsNullOrEmpty(revisedPrompt) && revisedPrompt!=prompt)
+                {
+                    combined += $"\r\n==>\r\nGPT revised it to: \"{revisedPrompt}\"";
+                }
+
+                ann.Annotate(destFp, annotatedFp, combined, true);
 
                 Statics.Logger.Log($"\t{DownloadedCount}/{RequestedCount} Saved. \t{destFp}\t");
             }
