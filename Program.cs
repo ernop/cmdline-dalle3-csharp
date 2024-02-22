@@ -71,6 +71,7 @@ namespace Dalle3
             {
                 Statics.Logger.Log("problem with input.");
                 Usage();
+                Console.ReadLine();
                 Environment.Exit(0);
             }
 
@@ -151,7 +152,12 @@ namespace Dalle3
                         try
                         {
                             //client.DownloadProgressChanged += (sender, e) => DownloadProgressHappened(sender, e, tempFp, fp, req.Prompt);
-
+                            if (req.Prompt.Length > 4000)
+                            {
+                                Statics.Logger.Log($"Prompt too long: {req.Prompt.Length} {req.Prompt.Substring(0,1000)}...");
+                                return;
+                            }
+                            
                             var url = res.Result.Data[0].Url;
                             var revisedPrompt = res.Result.Data[0].RevisedPrompt;
 

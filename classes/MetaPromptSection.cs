@@ -23,7 +23,8 @@ namespace Dalle3
             /// {a boy, a dog, a horse} => 3 long versions
             /// Also actually the [] sections are included here too.
 
-            var parts = input.Split(',').Select(el => el.Trim());
+            var sp = new string[] { ",," };
+            var parts = input.Split(sp, StringSplitOptions.RemoveEmptyEntries).Select(el => el.Trim());
             //so now we have either ["GPTLocations"], ["a boy"], or ["a boy", "a dog", "a horse"]
 
             foreach (var part in parts)
