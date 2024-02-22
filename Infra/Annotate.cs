@@ -6,6 +6,7 @@ using System.Drawing.Drawing2D;
 
 using static Dalle3.Statics;
 using Image = System.Drawing.Image;
+using System.Linq;
 
 public class Annotator
 {
@@ -26,44 +27,87 @@ public class Annotator
     public List<string> GetTextInLines(string text, int pixelWidth)
     {
         //for some reason we need a "real" graphics object to calculate text widths based off of.
-        var remainingText = text;
-        var parts = remainingText.Split('\n');
+        var remainingText = text.Trim();
+        var parts = remainingText.Split(new string[] { "\r\n" }, StringSplitOptions.None);
         var lines = new List<string>();
 
         foreach (var part in parts)
         {
-            var remainingTextThisLine = part.Trim() + " ";
+            var remainingTextThisLine = part;
+            if (string.IsNullOrWhiteSpace(remainingTextThisLine))
+            {
+                //if it is just a newline, add it as a line.
+                lines.Add(remainingTextThisLine);
+                continue;
+            }
             while (!string.IsNullOrEmpty(remainingTextThisLine))
             {
-                if (remainingTextThisLine == " ")
+                remainingTextThisLine = remainingTextThisLine.TrimEnd();
+                if (string.IsNullOrWhiteSpace(remainingTextThisLine))
                 {
                     break;
                 }
-                var testLength = remainingTextThisLine.Length - 1;
+
+                //just try to fit it all.
+                var w = FakeGraphics.MeasureString(remainingTextThisLine, Font);
+                if (w.Width < pixelWidth)
+                {
+                    lines.Add(remainingTextThisLine);
+                    break;
+                }
+
+                //test breaking off words from the end.
+                var words = remainingTextThisLine.Split(' ');
+                var wordsToSkipAtEnd = 1;
+                var shouldRetryAllSplitAttemptsFromBeginning = false;
+                while (true)
+                {
+                    var joined = string.Join(" ", words.Take(words.Count() - wordsToSkipAtEnd));
+                    var w2 = FakeGraphics.MeasureString(joined, Font);
+                    if (w2.Width < pixelWidth)
+                    {
+                        words = words.Skip(words.Count()- wordsToSkipAtEnd).ToArray();
+                        remainingTextThisLine = string.Join(" ", words);
+                        lines.Add(joined);
+                        shouldRetryAllSplitAttemptsFromBeginning = true;
+                        break;
+                    }
+                    wordsToSkipAtEnd++;
+                }
+                if (shouldRetryAllSplitAttemptsFromBeginning)
+                {
+                    continue;
+                }
+
+                //now just hard cut since it both doesn't fully fit, and there are no interior word breaks which work either.
+                var testLength = remainingText.Length - 1;
                 while (true)
                 {
                     if (testLength == 0)
                     {
-                        break;
+                        //how can this happen? the output image is just too narrow?
+                        throw new Exception("While fitting text into image, even taking 1 character at a time wasn't able to fit. hmm this has got to be a bug.");
                     }
-                    var nth = remainingTextThisLine[testLength];
-                    if (nth != ' ' && nth != '\t')
+                    var candidateText2 = remainingTextThisLine.Substring(0, testLength);
+                    var w3 = FakeGraphics.MeasureString(candidateText2, Font);
+                    if (w3.Width < pixelWidth)
                     {
-                        testLength--;
-                        continue;
-                    }
-                    var candidateText = remainingTextThisLine.Substring(0, testLength);
+                        lines.Add(candidateText2);
+                        remainingTextThisLine = remainingTextThisLine.Substring(0, testLength);
 
-                    var w = FakeGraphics.MeasureString(candidateText, Font);
-                    if (w.Width < pixelWidth)
-                    {
-                        remainingTextThisLine = remainingTextThisLine.Substring(testLength).Trim() + " ";
-                        lines.Add(candidateText.Trim());
+                        //we break so we try the full splitting attempt thing again. this is important.
+                        shouldRetryAllSplitAttemptsFromBeginning = true;
                         break;
                     }
                     testLength--;
-
                 }
+
+                if (shouldRetryAllSplitAttemptsFromBeginning)
+                {
+                    continue;
+                }
+
+                throw new Exception("Shouldn't be able to get here.");
             }
         }
 
@@ -115,7 +159,7 @@ public class Annotator
         {
             //add my watermarking etc here.  Slightly annoying since to be perfect I should maybe calculate the remaining Y space left for my small annotation?
             //But that's annoying. Rather just add 10pix or so to the bottom by default and fill mine in there.
-            var labelPos = (float)Math.Floor((double)(originalImageYHeightPixels + (lines.Count -1)* LineSize + 2 + sourceLabelExtraYPixels));
+            var labelPos = (float)Math.Floor((double)(originalImageYHeightPixels + (lines.Count - 1) * LineSize + 2 + sourceLabelExtraYPixels));
 
             var myFixedText = "dalle3-cmdline-csharp";
             var w = FakeGraphics.MeasureString(myFixedText, LabelFont);

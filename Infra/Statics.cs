@@ -157,7 +157,15 @@ namespace Dalle3
                     return null;
                 }
 
-                usingRawPrompt += " " + s;
+                if (string.IsNullOrWhiteSpace(s))
+                {
+                    usingRawPrompt += s;
+                }
+                else
+                {
+                    usingRawPrompt += " " + s;
+                }
+
             }
 
             if (!optionsModel.IncludeNormalImageOutput && !optionsModel.IncludeAnnotatedImageOutput)

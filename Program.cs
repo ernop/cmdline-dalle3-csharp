@@ -113,18 +113,15 @@ namespace Dalle3
                 //the library magically returns null when the actual object is "standard" and you are using dalle3 for some reason.
                 //so fix it here for tracking.
                 req.Quality = optionsModel.Quality;
-                //var usingSubPrompt = Substitutions.SubstituteExpansionsIntoPrompt(subPrompt);
                 var textx = textSections.Select(el => el.L);
 
-                //var tt = CultureInfo.CurrentCulture.TextInfo;
-                //req.Prompt = tt.ToTitleCase(string.Join(" ", textx).Replace(" ,", ","));
-                req.Prompt = string.Join(" ", textx).Replace("\r\n", " ").Replace("  ,", " ,").Replace("  ", " "); //.ToLowerInvariant()
+                req.Prompt = string.Join("", textx); //.ToLowerInvariant()
                 req.Size = optionsModel.Size;
                 var humanReadable = string.Join("_", textSections.Select(el => el.GetValueForHumanConsumption())).Replace(',', '_');
 
                 var l = req.Prompt.Length;
                 var displayedPromptLength = 100;
-                Statics.Logger.Log($"Sending:\t\"{req.Prompt.Substring(0, Math.Min(l, displayedPromptLength))}\"");
+                Statics.Logger.Log($"Sending:\t\"{req.Prompt.Substring(0, Math.Min(l, displayedPromptLength)).Replace("\r\n"," ")}\"");
 
                 //during asyncification: actually, I was already doing things wrong, probably. This 
                 // method is actually where the exceptions were popping out of, but like 100% of the time, the path from here to the big try catch below
@@ -170,23 +167,25 @@ namespace Dalle3
                         catch (Exception ex)
                         {
                             ErrorCount++;
+                            var safePrompt= req.Prompt.Substring(0, Math.Min(50, req.Prompt.Length));
                             if (ex.InnerException.Message.Contains("Your request was rejected as a result of our safety system. Your prompt may contain text that is not allowed by our safety system."))
                             {
-                                Statics.Logger.Log($"Prompt rejection.\t\"{req.Prompt}\"");
+                                Statics.Logger.Log($"Prompt rejection.\t\"{safePrompt}\"");
                                 System.IO.File.Delete(destFp);
                                 UpdateWithFilterResult(textSections, TextChoiceResultEnum.PromptRejected);
                                 await Task.Delay(2 * 1000);
                             }
                             else if (ex.InnerException.Message.Contains("Your request was rejected as a result of our safety system. Image descriptions generated from your prompt may contain text that is not allowed by our safety system. If you believe this was done in error, your request may succeed if retried, or by adjusting your prompt."))
                             {
-                                Statics.Logger.Log($"Regenerated internal prompt had non-allowed text.\t\"{req.Prompt}\"");
+                                
+                                Statics.Logger.Log($"Regenerated internal prompt had non-allowed text.\t\"\"");
                                 System.IO.File.Delete(destFp);
                                 UpdateWithFilterResult(textSections, TextChoiceResultEnum.DescriptionsBad);
                                 await Task.Delay(2 * 1000);
                             }
                             else if (ex.InnerException.Message.Contains("This request has been blocked by our content filters."))
                             {
-                                Statics.Logger.Log($"Content filter block.\t\"{req.Prompt}\"");
+                                Statics.Logger.Log($"Content filter block.\t\"{safePrompt}\"");
                                 System.IO.File.Delete(destFp);
                                 UpdateWithFilterResult(textSections, TextChoiceResultEnum.RequestBlocked);
                                 await Task.Delay(2 * 1000);
@@ -207,7 +206,7 @@ namespace Dalle3
                             }
                             else if (ex.InnerException.Message.Contains("invalid_request_error") && ex.InnerException.Message.Contains(" is too long - \'prompt\'"))
                             {
-                                Statics.Logger.Log($"Your prompt was {req.Prompt.Length} characters and it started: \"{req.Prompt.Substring(0, 30)}...\". This is too long. The actual limit is 4000.");
+                                Statics.Logger.Log($"Your prompt was {req.Prompt.Length} characters and it started: \"{safePrompt}...\". This is too long. The actual limit is 4000.");
                                 System.IO.File.Delete(destFp);
                                 UpdateWithFilterResult(textSections, TextChoiceResultEnum.TooLong);
                             }
@@ -220,7 +219,7 @@ namespace Dalle3
                             }
                             else
                             {
-                                Statics.Logger.Log($"\tUnknownException.\t\"{req.Prompt}\"\r\n{ex}");
+                                Statics.Logger.Log($"\tUnknownException.\t\"{safePrompt}\"\r\n{ex}");
                                 Statics.Logger.Log($"{GetMessageLine(ex.InnerException.Message)}");
                                 System.IO.File.Delete(destFp);
                             }
@@ -361,7 +360,15 @@ namespace Dalle3
                 var combined = prompt;
                 if (!string.IsNullOrEmpty(revisedPrompt) && revisedPrompt!=prompt)
                 {
-                    combined += $"\r\n==>\r\nGPT revised it to: \"{revisedPrompt}\"";
+                    Console.WriteLine($"{revisedPrompt}");
+                    //revisedPrompt = revisedPrompt.Replace("\\r\\n", "\r\n");
+                    if (revisedPrompt.IndexOf("\\")!=-1)
+                    {
+                        revisedPrompt = revisedPrompt.Replace("\\r\\n", "\r\n");
+                        //revisedPrompt = revisedPrompt.Replace(@"\\\\", @"\\");
+                        //revisedPrompt = revisedPrompt.Replace("\\", "");
+                    }
+                    combined += $"\r\n\r\nGPT revised it to: ==> \r\n\r\n {revisedPrompt}";
                 }
 
                 ann.Annotate(destFp, annotatedFp, combined, true);
