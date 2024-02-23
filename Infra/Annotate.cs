@@ -12,7 +12,7 @@ public class Annotator
 {
     public Graphics FakeGraphics { get; set; } = Graphics.FromImage(new Bitmap("../../image.png"));
 
-    public static int LineSize { get; set; } = 23;
+    public static int LineSize { get; set; } = 27;
     public static int FontSize { get; set; } = 18;
     public Font Font { get; set; } = new Font("Gotham", FontSize, FontStyle.Regular);
     public Font LabelFont { get; set; } = new Font("Gotham", FontSize / 2, FontStyle.Bold);

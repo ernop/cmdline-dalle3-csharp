@@ -37,7 +37,7 @@ namespace Dalle3
                         Usage();
                         Environment.Exit(0);
                     }
-                    await AsyncMain(argset.Split(' '));
+                    await AsyncMain(argset.Trim().Split(' '));
                 }
             }
             else
@@ -121,7 +121,7 @@ namespace Dalle3
 
                 var l = req.Prompt.Length;
                 var displayedPromptLength = 100;
-                Statics.Logger.Log($"Sending:\t\"{req.Prompt.Substring(0, Math.Min(l, displayedPromptLength)).Replace("\r\n"," ")}\"");
+                Statics.Logger.Log($"Sending:\t\"{req.Prompt.Substring(0, Math.Min(l, displayedPromptLength)).Replace("\r\n", " ")}\"");
 
                 //during asyncification: actually, I was already doing things wrong, probably. This 
                 // method is actually where the exceptions were popping out of, but like 100% of the time, the path from here to the big try catch below
@@ -151,10 +151,11 @@ namespace Dalle3
                             //client.DownloadProgressChanged += (sender, e) => DownloadProgressHappened(sender, e, tempFp, fp, req.Prompt);
                             if (req.Prompt.Length > 4000)
                             {
-                                Statics.Logger.Log($"Prompt too long: {req.Prompt.Length} {req.Prompt.Substring(0,1000)}...");
+                                Statics.Logger.Log($"Prompt too long, truncating. Cut {req.Prompt.Length-4000} \"...{req.Prompt.Substring(4000, req.Prompt.Length-4000)}\"");
+                                req.Prompt=req.Prompt.Substring(0, 4000);
                                 return;
                             }
-                            
+
                             var url = res.Result.Data[0].Url;
                             var revisedPrompt = res.Result.Data[0].RevisedPrompt;
 
@@ -167,7 +168,7 @@ namespace Dalle3
                         catch (Exception ex)
                         {
                             ErrorCount++;
-                            var safePrompt= req.Prompt.Substring(0, Math.Min(50, req.Prompt.Length));
+                            var safePrompt = req.Prompt.Substring(0, Math.Min(50, req.Prompt.Length));
                             if (ex.InnerException.Message.Contains("Your request was rejected as a result of our safety system. Your prompt may contain text that is not allowed by our safety system."))
                             {
                                 Statics.Logger.Log($"Prompt rejection.\t\"{safePrompt}\"");
@@ -177,7 +178,7 @@ namespace Dalle3
                             }
                             else if (ex.InnerException.Message.Contains("Your request was rejected as a result of our safety system. Image descriptions generated from your prompt may contain text that is not allowed by our safety system. If you believe this was done in error, your request may succeed if retried, or by adjusting your prompt."))
                             {
-                                
+
                                 Statics.Logger.Log($"Regenerated internal prompt had non-allowed text.\t\"\"");
                                 System.IO.File.Delete(destFp);
                                 UpdateWithFilterResult(textSections, TextChoiceResultEnum.DescriptionsBad);
@@ -243,22 +244,6 @@ namespace Dalle3
             Statics.Logger.Log("Got to end, waiting. =================.");
 
             var last = 0;
-            //while (true)
-            //{
-            //    Statics.Logger.Log($"\tDownloaded:{DownloadedCount}, Requested:{RequestedCount}, Errored:{ErrorCount}");
-            //    Statics.Logger.Log("======Intermediate report =================.");
-            //    foreach (var el in optionsModel.PromptSections)
-            //    {
-            //        Statics.Logger.Log(el.ReportResults());
-            //    }
-
-            //    if (RequestedCount <= DownloadedCount + ErrorCount)
-            //    {
-            //        break;
-            //    }
-
-            //    await Task.Delay(6000);
-            //}
             await Task.WhenAll(tasks);
             Statics.Logger.Log("======done with WhenALL. =================.");
             Statics.Logger.Log("======Final Report=================.");
@@ -351,27 +336,35 @@ namespace Dalle3
 
                 var ann = new Annotator();
                 //assume the file exists at uniquefp now.
+
+                //we have two targets: annotated is the FULL annotation, revised is just the revised prompt, not the (possibly massive) entire prompt and training leading up to it..
                 var annotatedFp = destFp.Replace(".png", "_annotated.png");
 
-                var directory = Path.GetDirectoryName(annotatedFp);
-                var filename = Path.GetFileName(annotatedFp);
-                annotatedFp = directory + "/annotated/" + filename;
+                var aDirectory = Path.GetDirectoryName(annotatedFp);
+                var aFilename = Path.GetFileName(annotatedFp);
 
-                var combined = prompt;
-                if (!string.IsNullOrEmpty(revisedPrompt) && revisedPrompt!=prompt)
+                annotatedFp = aDirectory + "/annotated/" + aFilename;
+
+                var annotatedCompletePrompt = prompt;
+                if (!string.IsNullOrEmpty(revisedPrompt) && revisedPrompt != prompt)
                 {
                     Console.WriteLine($"{revisedPrompt}");
-                    //revisedPrompt = revisedPrompt.Replace("\\r\\n", "\r\n");
-                    if (revisedPrompt.IndexOf("\\")!=-1)
+                    revisedPrompt= revisedPrompt.Replace("|||", "\r\n\r\n").Replace("\r\n ","\r\n");
+                    if (revisedPrompt.IndexOf("\\") != -1)
                     {
                         revisedPrompt = revisedPrompt.Replace("\\r\\n", "\r\n");
-                        //revisedPrompt = revisedPrompt.Replace(@"\\\\", @"\\");
-                        //revisedPrompt = revisedPrompt.Replace("\\", "");
                     }
-                    combined += $"\r\n\r\nGPT revised it to: ==> \r\n\r\n {revisedPrompt}";
+                    annotatedCompletePrompt += $"\r\n\r\nGPT revised it to: ==> \r\n\r\n {revisedPrompt}";
                 }
 
-                ann.Annotate(destFp, annotatedFp, combined, true);
+                ann.Annotate(destFp, annotatedFp, annotatedCompletePrompt, true);
+
+                var revisedAnnotationFp = destFp.Replace(".png", "_revised.png");
+                var rDirectory = Path.GetDirectoryName(revisedAnnotationFp);
+                var rFilename = Path.GetFileName(revisedAnnotationFp);
+                revisedAnnotationFp = rDirectory + "/revised/" + rFilename;
+
+                ann.Annotate(destFp, revisedAnnotationFp, revisedPrompt, true);
 
                 Statics.Logger.Log($"\t{DownloadedCount}/{RequestedCount} Saved. \t{destFp}\t");
             }
