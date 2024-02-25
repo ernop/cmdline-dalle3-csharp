@@ -21,7 +21,7 @@ namespace Dalle3
         {
             ///three options:
             /// {GPTLocations} => a,b,c
-            /// {a boy} => long verison
+            /// {a boy} => long version
             /// {a boy, a dog, a horse} => 3 long versions
             /// Also actually the [] sections are included here too.
 
@@ -32,7 +32,7 @@ namespace Dalle3
             foreach (var part in parts)
             {
                 var alias = Aliases.GetAliases().FirstOrDefault(el => el.Name == part);
-                if (alias == null) //raw text like {a newfoij, a  f2w3i}
+                if (alias == null)
                 {
                     var abb = new InternalTextSection(part, part, true, parent);
                     Contents.Add(abb);

@@ -119,7 +119,7 @@ public class Annotator
 
     public static string CoalesceAllNewlineLikeSections(string input)
     {
-        //the input may have sections of \r, \n, \n\n, \r\n, etc. and we want to convert the entirety ofa ny such contiguous section to a single one.
+        //the input may have sections of \r, \n, \n\n, \r\n, etc. and we want to convert the entirety of any such contiguous section to a single one.
         //we do this so they don't get doubled up.
         input = input.Replace("\r\n", "\n").Replace("\r","\n");
 

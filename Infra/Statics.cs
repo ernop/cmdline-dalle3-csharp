@@ -1,19 +1,11 @@
 ﻿using OpenAI_API.Images;
-using OpenAI_API.Models;
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Net;
-using System.Reflection;
-using System.Runtime.InteropServices;
-using System.Runtime.Remoting.Messaging;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-
-using static System.Collections.Specialized.BitVector32;
 
 namespace Dalle3
 {
@@ -57,7 +49,7 @@ namespace Dalle3
         public static void Usage()
         {
             Console.WriteLine("\r\nFormat------ 'Dalle3.exe [-N] [-r] [-h|v] [-hd] [prompt]'" +
-                "\r\nExample-------- 'Dalle3.exe A very {big,blue,tall} photo of a [tall,small] [1-2,cat,dog,mouse monster] i the stylue of {GPTArtstyles}'" +
+                "\r\nExample-------- 'Dalle3.exe A very {big,blue,tall} photo of a [tall,small] [1-2,cat,dog,mouse monster] i the style of {GPTArtstyles}'" +
                 "\r\n\r\nExplanation of terms:" +
                 "\r\n\tN = \t\t\tnumber of times to repeat prompt. Will die if any fail. Prompt can be multiple words with no quotes required, but no newlines." +
                 "\r\n\t-r =\t\t\toutput items in random order. default or missing, will output in permutation order. This applies to both permutations and powersets. So without -r you will iterate through all subsets in order." +
@@ -183,7 +175,7 @@ namespace Dalle3
 
             //okay, I don't want to use a syntax parser and all that here. I'll just use some magical stuff
             //to switch this out in a safe section where at the end I"m guaranteed to have all significant "segments".
-            //a segment now is either "{...}" (a permuatation sectrion) or "...".  If later
+            //a segment now is either "{...}" (a permutation section) or "...".  If later
             //I want to add a powerset section such as [], I can use some magic to do that. The point here is that:
             //the first char of the chunk is the pointer for who should parse it into an IPromptSection, and we remove the last char.
 

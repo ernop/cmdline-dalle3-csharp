@@ -7,13 +7,10 @@ using System.Threading.Tasks;
 using System.Linq;
 using static Dalle3.Statics;
 
-using System.ComponentModel;
 using System.IO;
 
 using System.Threading;
 using Dalle3.Infra;
-using OpenAI_API.Completions;
-using System.Drawing.Text;
 
 namespace Dalle3
 {

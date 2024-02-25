@@ -15,13 +15,13 @@ namespace Dalle3.Infra
     /// <summary>
     /// 1. you can use this for manually testing/iterating on a bunch of prompts at once, so they overlap nicely.
     /// 2. I've also got a "meta-prompt overriding" thing in here now, where I prepend instructions to the final prompt generator including
-    /// examples of it slavishly conforming to exactly waht I way (hopefully, to fight against any outer prompt from OpenAI). This seems to 
+    /// examples of it slavishly conforming to exactly what I way (hopefully, to fight against any outer prompt from OpenAI). This seems to 
     /// work pretty well as a way to force the actual text sent to Dalle3 to be more varied and interesting.
     /// 
     /// Obviously, I should keep going in this direction and make it available via command line and other areas, too, so that it 
     /// is routine to have the user in control.
     /// 
-    /// todo: also, rather than giving global exampls of conformity, for every meta-prompt guidance, I should really have my own specific examples for it!
+    /// todo: also, rather than giving global examples of conformity, for every meta-prompt guidance, I should really have my own specific examples for it!
     /// that would work great, and be way shorter.
     /// </summary>
     internal static class OverridePrompts
@@ -35,7 +35,7 @@ namespace Dalle3.Infra
                 //inp = "{watercolor, illustration, pointillism} of {boy, woman, man} in {mystery, romance, science fiction} set {mountains, ocean, desert}. -r";
                 //inp = "{watercolor, illustration, pointillism} of {boy, woman, man} in {mystery, romance, science fiction} set {mountains, ocean, desert}. -r";
                 //inp = "{Watercolor, Illustration, Sprang} of {Boy, Woman, Man} in {Mystery, Romance, Science Fiction} set {Mountains}. -r";
-                //inp = "{huchol art style, stark silhouette extreme chiaroscuro style, reminiscent of the style of dick sprang, similar ot the style of paul cesar helleu, in the photographic style of mark shaw} of {Man} in {Mystery, Romance, Science Fiction} set {Mountains}. -r";
+                //inp = "{huchol art style, stark silhouette extreme chiaroscuro style, reminiscent of the style of dick sprang, similar of the style of paul cesar helleu, in the photographic style of mark shaw} of {Man} in {Mystery, Romance, Science Fiction} set {Mountains}. -r";
                 //inp = "{an 2d overlay paper cutout by william steig, " +
                 //    "a flat 2d incredibly detailed and emotional style cartoon image by arnold lobel and william sprang with a warm glow and nostalgia," +
                 //    "a bright colorful claire wendling engraving, " +
@@ -74,7 +74,7 @@ current located deep in a cabin-like hidden outdoor mansion, far out in the Paci
         //make the prompt as long and detailed as possible.,,
         //everything mentioned in the output should start with the letter A only, and you can adjust the prompt to satisfy it as well as possible. only words starting with A,,
         //everything mentioned in the output should start with the letter S only, and you can adjust the prompt to satisfy it as well as possible. only words starting with S,,
-        //make the output all uppercase and only use very very short words of 5 letters or less and put them into a natural iambic pentameter rhythm.,,
+        //make the output all uppercase and only use very short words of 5 letters or less and put them into a natural iambic pentameter rhythm.,,
         //make the output all uppercase and only use words of 7+ letters long and put them into a natural iambic pentameter rhythm.,,
         //In addition to the prompt, add in super intense random color words so that everything in the output is specifically colored with a gradient scheme of your choice,,
         //modify the prompt by adding in references to a giant peach and a raccoon detective, and also make the image fully film noir,//
