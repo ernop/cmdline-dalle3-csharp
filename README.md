@@ -1,3 +1,14 @@
+### Next version
+
+* refactoring stuff, mainly fixing reporting and progress of how things work
+* splitting out a bunch of stuff from program.cs
+* mainly about reporting progress as you go, preparing for things like "if a prompt section has failed 100% of the time on a certain option, even after trying like 10 times, you should probably just quit that one."
+  * and even more cool stuff later like iteratively adjusting prompts.
+  * i.e. initial prompt => 10 images => gptvision them => extract phrases from that into original => iterate
+  * and automatically picking up on old threads
+  * kind of like there is a huge stack of frames and at each frame you can go back, put it to the bottom of the pile, or make descendants? but there has got to be lots of crossover, which will mess this up.
+* Can I put in stuff about cost? so if you are going to make a call that's going to cost like more than 20$, get you to confirm? configurable obv
+
 # Updated Usage
 
 ```

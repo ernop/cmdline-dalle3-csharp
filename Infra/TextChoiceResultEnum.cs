@@ -10,7 +10,7 @@
     {
         Okay = 1,
         PromptRejected = 2,
-        DescriptionsBad = 3,
+        ImageDescriptionsGeneratedBad = 3,
         RequestBlocked = 4,
         RateLimit=5,
         RateLimitRepeatedlyExceeded = 6,

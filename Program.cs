@@ -12,15 +12,13 @@ using System.IO;
 
 using System.Threading;
 using Dalle3.Infra;
+using OpenAI_API.Completions;
+using System.Drawing.Text;
 
 namespace Dalle3
 {
     internal class Program
     {
-        public static int RequestedCount { get; set; } = 0;
-        public static int DownloadedCount { get; set; } = 0;
-        public static int ErrorCount { get; set; } = 0;
-
         static async Task Main(string[] args)
         {
             bool locl = false;
@@ -37,6 +35,7 @@ namespace Dalle3
                         Usage();
                         Environment.Exit(0);
                     }
+
                     await AsyncMain(argset.Trim().Split(' '));
                 }
             }
@@ -78,9 +77,11 @@ namespace Dalle3
             var api = new OpenAI_API.OpenAIAPI(Statics.ApiKey);
 
             var start = DateTime.Now;
+            var billingBreak = false;
 
             for (var ii = 0; ii < optionsModel.ImageNumber; ii++)
             {
+                if (billingBreak) { break; }
                 //general obey rate limit.
                 await throttler.WaitAsync();
 
@@ -113,15 +114,16 @@ namespace Dalle3
                 //the library magically returns null when the actual object is "standard" and you are using dalle3 for some reason.
                 //so fix it here for tracking.
                 req.Quality = optionsModel.Quality;
-                var textx = textSections.Select(el => el.L);
 
-                req.Prompt = string.Join("", textx); //.ToLowerInvariant()
+                req.Prompt = string.Join("", textSections.Select(el => el.L));
                 req.Size = optionsModel.Size;
-                var humanReadable = string.Join("_", textSections.Select(el => el.GetValueForHumanConsumption())).Replace(',', '_');
+                var humanReadable = string.Join("_", textSections.Select(el => el.GetValueForHumanConsumption().Trim())).Replace(',', '_');
 
                 var l = req.Prompt.Length;
                 var displayedPromptLength = 100;
-                Statics.Logger.Log($"Sending:\t\"{req.Prompt.Substring(0, Math.Min(l, displayedPromptLength)).Replace("\r\n", " ")}\"");
+                var mm = Statics.GenerateMeaningfulSummaryOfChosenPromptOptions(optionsModel, textSections);
+
+                Statics.Logger.Log($"Sending:\t\"{mm}");
 
                 //during asyncification: actually, I was already doing things wrong, probably. This 
                 // method is actually where the exceptions were popping out of, but like 100% of the time, the path from here to the big try catch below
@@ -134,245 +136,77 @@ namespace Dalle3
                 //okay so the idea now is that we have a "danger zone" which we enter.
                 //we want to may tasks async so they can run past that point, but don't let them escape the trycatch
                 //until we know they are done and can't at all be risky anymore.
+
+                //okay, looking at how threads get used, a lot of this may be unsafe. Because apparently even if I try to stay single threaded,
+                //and only use the async awaits to have the main thread work while others are waiting/downloading, there can apparently still be multiple coming in.
+                //I shoudl test that. anyway, don't rely on this block being guarded.
                 var task = Task.Run(async () =>
                 {
-                    RequestedCount++;
-                    var res = api.ImageGenerations.CreateImageAsync(req);
+                    //var req2 = new CompletionRequest();
+                    //req2.
+                    //api.Completions.CreateCompletionAsync()
+                    //req2.
+                    //api.ImageGenerations.CreateImageAsync(req2);
+                    //client.DownloadProgressChanged += (sender, e) => DownloadProgressHappened(sender, e, tempFp, fp, req.Prompt);
 
                     //this is the final destination; in actuality we will temporarily store them up one folder!
                     //also we reserve this location with something.
                     var destFp = Statics.PromptToDestFpWithReservation(req, humanReadable, taskId);
                     var tempFp = $"{Path.GetTempPath()}{taskId}.png";
 
-                    using (WebClient client = new WebClient())
+                    try
                     {
-                        try
+                        optionsModel.IncStr("RequestedCount");
+                        var res = await api.ImageGenerations.CreateImageAsync(req);
+                        using (WebClient client = new WebClient())
                         {
-                            //client.DownloadProgressChanged += (sender, e) => DownloadProgressHappened(sender, e, tempFp, fp, req.Prompt);
                             if (req.Prompt.Length > 4000)
                             {
-                                Statics.Logger.Log($"Prompt too long, truncating. Cut {req.Prompt.Length-4000} \"...{req.Prompt.Substring(4000, req.Prompt.Length-4000)}\"");
-                                req.Prompt=req.Prompt.Substring(0, 4000);
+                                Statics.Logger.Log($"Prompt too long, truncating. Cut {req.Prompt.Length - 4000} \"...{req.Prompt.Substring(4000, req.Prompt.Length - 4000)}\"");
+                                optionsModel.IncStr("TooLong");
+                                req.Prompt = req.Prompt.Substring(0, 4000);
                                 return;
                             }
 
-                            var url = res.Result.Data[0].Url;
-                            var revisedPrompt = res.Result.Data[0].RevisedPrompt;
+                            var url = res.Data[0].Url;
+                            var revisedPrompt = res.Data[0].RevisedPrompt;
 
-                            client.DownloadFileCompleted +=
-                                (sender, e) => DownloadCompleted(sender, e, tempFp, destFp, req.Prompt, revisedPrompt, textSections);
+                            client.DownloadFileCompleted += (sender, e) => Getter.DownloadCompleted(sender, e, optionsModel, tempFp, destFp, req.Prompt, revisedPrompt, textSections);
 
                             client.DownloadFileAsync(new Uri(url), tempFp);
+                            //Statics.Logger.Log($"Generated image for the complete prompt: {Statics.GenerateMeaningfulSummaryOfChosenPromptOptinos(optionsModel, textSections)}");
                         }
+                    }
 
-                        catch (Exception ex)
-                        {
-                            ErrorCount++;
-                            var safePrompt = req.Prompt.Substring(0, Math.Min(50, req.Prompt.Length));
-                            if (ex.InnerException.Message.Contains("Your request was rejected as a result of our safety system. Your prompt may contain text that is not allowed by our safety system."))
-                            {
-                                Statics.Logger.Log($"Prompt rejection.\t\"{safePrompt}\"");
-                                System.IO.File.Delete(destFp);
-                                UpdateWithFilterResult(textSections, TextChoiceResultEnum.PromptRejected);
-                                await Task.Delay(2 * 1000);
-                            }
-                            else if (ex.InnerException.Message.Contains("Your request was rejected as a result of our safety system. Image descriptions generated from your prompt may contain text that is not allowed by our safety system. If you believe this was done in error, your request may succeed if retried, or by adjusting your prompt."))
-                            {
+                    catch (Exception ex) //what this really means is, this particular set of ITS derived from optionsModel.PromptSections didn't work.  They each know their parent (or they are the core ITS?)
+                    {
+                        //wait a minute, by the time we get here, how do we know AT ALL that these fake section => Parent pointers objects all line up regarding the actual text that was used?
+                        //actually, it's good we use the child temporary ITS since that, at least, isn't duplicated. So even if parent's "CurrentN" has moved on, it doesn't hurt us.
+                        optionsModel.IncStr("Error");
 
-                                Statics.Logger.Log($"Regenerated internal prompt had non-allowed text.\t\"\"");
-                                System.IO.File.Delete(destFp);
-                                UpdateWithFilterResult(textSections, TextChoiceResultEnum.DescriptionsBad);
-                                await Task.Delay(2 * 1000);
-                            }
-                            else if (ex.InnerException.Message.Contains("This request has been blocked by our content filters."))
-                            {
-                                Statics.Logger.Log($"Content filter block.\t\"{safePrompt}\"");
-                                System.IO.File.Delete(destFp);
-                                UpdateWithFilterResult(textSections, TextChoiceResultEnum.RequestBlocked);
-                                await Task.Delay(2 * 1000);
-                            }
-                            else if (ex.InnerException.Message.Contains("\"Rate limit exceeded for images per minute in organization"))
-                            {
-                                var sleepTime = 10;
-                                Statics.Logger.Log($"{ex.InnerException.Message}  sleep for: {sleepTime}s");
-                                //UpdateWithFilterResult(textSections, TextChoiceResultEnum.RateLimit);
-                                System.IO.File.Delete(destFp);
-                                await Task.Delay(sleepTime * 1000);
-                            }
-                            else if (ex.InnerException.Message.Contains("\"Billing hard limit has been reached\""))
-                            {
-                                Statics.Logger.Log(ex.InnerException.Message);
-                                System.IO.File.Delete(destFp);
-                                UpdateWithFilterResult(textSections, TextChoiceResultEnum.BillingLimit);
-                            }
-                            else if (ex.InnerException.Message.Contains("invalid_request_error") && ex.InnerException.Message.Contains(" is too long - \'prompt\'"))
-                            {
-                                Statics.Logger.Log($"Your prompt was {req.Prompt.Length} characters and it started: \"{safePrompt}...\". This is too long. The actual limit is 4000.");
-                                System.IO.File.Delete(destFp);
-                                UpdateWithFilterResult(textSections, TextChoiceResultEnum.TooLong);
-                            }
-                            else if (ex.InnerException.Message.Contains("Rate limit repeatedly exceeded"))
-                            {
-                                Statics.Logger.Log($"You blew up the rate limit unfortunately.");
-                                Statics.Logger.Log($"{GetMessageLine(ex.InnerException.Message)}");
-                                System.IO.File.Delete(destFp);
-                                UpdateWithFilterResult(textSections, TextChoiceResultEnum.RateLimitRepeatedlyExceeded);
-                            }
-                            else
-                            {
-                                Statics.Logger.Log($"\tUnknownException.\t\"{safePrompt}\"\r\n{ex}");
-                                Statics.Logger.Log($"{GetMessageLine(ex.InnerException.Message)}");
-                                System.IO.File.Delete(destFp);
-                            }
-                        }
-                        finally
-                        {
-                            throttler.Release();
-                        }
+                        billingBreak = await HandleOpenAIException(optionsModel, ex, req, destFp, textSections);
+                        DoReport(optionsModel);
+                    }
+                    finally
+                    {
+                        throttler.Release();
+                        
                     }
                 });
-
                 tasks.Add(task);
+                var got = optionsModel.Results.TryGetValue("DownloadedCount", out var n);
 
-                if (DownloadedCount >= 300)
+                if (got && n >= 300)
                 {
-                    Statics.Logger.Log("break early due to generating so many. =================.");
+                    Statics.Logger.Log($"break early due to generating {n}. =================.");
                     break;
                 }
+
             }
 
-            Statics.Logger.Log("Got to end, waiting. =================.");
-
-            var last = 0;
             await Task.WhenAll(tasks);
-            Statics.Logger.Log("======done with WhenALL. =================.");
-            Statics.Logger.Log("======Final Report=================.");
-            foreach (var el in optionsModel.PromptSections)
-            {
-                Statics.Logger.Log(el.ReportResults());
-            }
-
-            Statics.Logger.Log($"{DownloadedCount}/{RequestedCount} downloaded successfully ({100.0 * DownloadedCount / (RequestedCount * 1.0):0.0}%). Hit a key to end.");
-
-        }
-
-        private static string GetMessageLine(string inlines)
-        {
-            var p = inlines.Split(new[] { "\n" }, StringSplitOptions.None);
-            foreach (var el in p)
-            {
-                if (el.Contains("\"message\":"))
-                {
-                    return el.Trim();
-                }
-            }
-            return "";
-        }
-
-        private static void DownloadProgressHappened(object sender, DownloadProgressChangedEventArgs e, string tempfp, string fp, string prompt)
-        {
-            var progress = e as DownloadProgressChangedEventArgs;
-            if (progress != null)
-            {
-                Statics.Logger.Log($"\t\t{fp}\t{progress.ProgressPercentage}%");
-            }
-        }
-
-        //Google photo uploader and other programs will incorrectly start messing with files before they're finished.
-        //1. if you save them with another extension which would be ignored, then you get locking issues when trying to move them.
-        //2. so instead i just save them out of view then move them back.
-        //3. we also delay creating the unique filename.
-        //4. also save an annotated version?
-        private static void DownloadCompleted(object sender, AsyncCompletedEventArgs e, string srcFp, string destFp,
-            string prompt, string revisedPrompt, IEnumerable<InternalTextSection> ungroupedTextSections)
-        {
-            try
-            {
-                //the new reservation system? ugh.
-                if (!System.IO.File.Exists(destFp))
-                {
-                    throw new Exception("No reservation.");
-                }
-                var fa = new FileInfo(destFp);
-                if (fa.Length > 0)
-                {
-                    throw new Exception("too bad.'");
-                }
-
-                try
-                {
-                    System.IO.File.Copy(srcFp, destFp, true);
-                    System.IO.File.Delete(srcFp);
-                    DownloadedCount++;
-                }
-                catch (System.IO.FileNotFoundException ex)
-                {
-                    //we have already moved the file where its supposed to go.
-                    Statics.Logger.Log($"Disappeared so going on: {destFp}");
-                    ErrorCount++;
-                    //break;
-
-                }
-                catch (System.IO.IOException ex)
-                {
-                    //well, sometimes we call download completed... before the image is completely downloaded. yah that's how things go.
-                    Task.WaitAll(Task.Delay(1000));
-                    Statics.Logger.Log($"IOexcpeton. {ex} {destFp}");
-                    ErrorCount++;
-                    //continue;
-                }
-
-                catch (Exception ex)
-                {
-                    //either it was busy, or the target existed? not sure about that latter thing.
-                    Statics.Logger.Log($"\t{destFp}\tFailed with ex: {ex}.");
-                    Task.WaitAll(Task.Delay(1000));
-                    ErrorCount++;
-                    //continue;
-                }
-
-                UpdateWithFilterResult(ungroupedTextSections, TextChoiceResultEnum.Okay);
-                //we need to redo the target name cause its gotten taken in the meantime.
-
-                var ann = new Annotator();
-                //assume the file exists at uniquefp now.
-
-                //we have two targets: annotated is the FULL annotation, revised is just the revised prompt, not the (possibly massive) entire prompt and training leading up to it..
-                var annotatedFp = destFp.Replace(".png", "_annotated.png");
-
-                var aDirectory = Path.GetDirectoryName(annotatedFp);
-                var aFilename = Path.GetFileName(annotatedFp);
-
-                annotatedFp = aDirectory + "/annotated/" + aFilename;
-
-                var annotatedCompletePrompt = prompt;
-                if (!string.IsNullOrEmpty(revisedPrompt) && revisedPrompt != prompt)
-                {
-                    Console.WriteLine($"{revisedPrompt}");
-                    revisedPrompt= revisedPrompt.Replace("|||", "\r\n\r\n").Replace("\r\n ","\r\n");
-                    if (revisedPrompt.IndexOf("\\") != -1)
-                    {
-                        revisedPrompt = revisedPrompt.Replace("\\r\\n", "\r\n");
-                    }
-                    annotatedCompletePrompt += $"\r\n\r\nGPT revised it to: ==> \r\n\r\n {revisedPrompt}";
-                }
-
-                ann.Annotate(destFp, annotatedFp, annotatedCompletePrompt, true);
-
-                var revisedAnnotationFp = destFp.Replace(".png", "_revised.png");
-                var rDirectory = Path.GetDirectoryName(revisedAnnotationFp);
-                var rFilename = Path.GetFileName(revisedAnnotationFp);
-                revisedAnnotationFp = rDirectory + "/revised/" + rFilename;
-
-                ann.Annotate(destFp, revisedAnnotationFp, revisedPrompt, true);
-
-                Statics.Logger.Log($"\t{DownloadedCount}/{RequestedCount} Saved. \t{destFp}\t");
-            }
-            catch (Exception ex)
-            {
-                Statics.Logger.Log("weird error." + ex.ToString());
-                ErrorCount++;
-            }
+            Statics.Logger.Log("\r\n===============FinalReport=============\r\n");
+            DoReport(optionsModel);
         }
     }
 }

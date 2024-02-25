@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Net;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Runtime.Remoting.Messaging;
@@ -12,11 +13,14 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
+using static System.Collections.Specialized.BitVector32;
+
 namespace Dalle3
 {
     internal static class Statics
     {
         public static Logger Logger = new Logger("../../logs/log.txt");
+        public static int SliceAmount { get; } = 50;
         public static string ApiKey { get; set; } = System.IO.File.ReadAllText("../../apikey.txt");
         public static string OrgId { get; set; } = System.IO.File.ReadAllText("../../organization.txt");
         public static Random Random = new Random();
@@ -167,7 +171,7 @@ namespace Dalle3
                 }
 
             }
-
+            usingRawPrompt = usingRawPrompt.Trim();
             if (!optionsModel.IncludeNormalImageOutput && !optionsModel.IncludeAnnotatedImageOutput)
             {
                 Statics.Logger.Log("You have disabled both normal and annotated image output. There is nothing to do, so quitting.");
@@ -265,6 +269,8 @@ namespace Dalle3
         {
             var subset = new List<InternalTextSection>();
             var indices = new List<int>();
+
+            //each jj is the index of an item which we will include or not include.
             for (int jj = 0; jj < items.Count(); jj++)
             {
                 indices.Add(jj);
@@ -298,17 +304,158 @@ namespace Dalle3
             return res;
         }
 
-        public static void UpdateWithFilterResult(IEnumerable<InternalTextSection> ungroupedSections, TextChoiceResultEnum el)
+        /// <summary>
+        /// this is called on a set of temporary, internal ITS that is generated for a specific promptSection configuration.
+        /// </summary>
+        public static void UpdateWithFilterResult(OptionsModel optionsModel, IEnumerable<InternalTextSection> sections, TextChoiceResultEnum result)
         {
-            ///So for example a powerset of [a,b,c] might send (a,c) here.
-            foreach (var section in ungroupedSections)
+            ///So for example a powerset of [a,b,c] might send (a,c) here after succeeding or being blocked, to let the parents know that that subsection was bad.
+            optionsModel.IncStr(result.ToString());
+            foreach (var section in sections)
             {
                 if (section.Parent == null)
                 {
                     continue;
                 }
-                section.Parent.ReceiveChoiceResult(section, el); ;
+                section.Parent.ReceiveChoiceResult(section, result); ;
             }
+        }
+
+        /// <summary>
+        /// The way we do it now is a bit messed up. We just have each individual part explain the entire thing.
+        /// </summary>
+        /// <param name="optionsModel"></param>
+        public static void DoReport(OptionsModel optionsModel)
+        {
+            var orderedKeys = new List<string>() { "RequestedCount", "Okay", "Error",  };
+            foreach (var k in optionsModel.Results.Keys.OrderByDescending(el => (optionsModel.Results[el], el)))
+            {
+                if (orderedKeys.IndexOf(k) == -1)
+                {
+                    orderedKeys.Add(k);
+                }
+            }
+
+            var res = "\r\n======";
+            foreach (var key in orderedKeys)
+            {
+                if (!optionsModel.Results.TryGetValue(key, out int v))
+                {
+                    v = 0;
+                }
+                res += $"\t{key}:{v}";
+            }
+
+            var include = true;
+            foreach (var el in optionsModel.PromptSections)
+            {
+                res += el.ReportResults(include);
+                include = false;
+            }
+
+            Statics.Logger.Log(res);
+        }
+
+        /// <summary>
+        /// for ripping apart raw already-formatted strings from openAI webserver.
+        /// </summary>
+        public static string GetMessageLine(string inlines)
+        {
+            var p = inlines.Split(new[] { "\n" }, StringSplitOptions.None);
+            foreach (var el in p)
+            {
+                if (el.Contains("\"message\":"))
+                {
+                    return el.Trim();
+                }
+            }
+            return "";
+        }
+
+        private static void DownloadProgressHappened(object sender, DownloadProgressChangedEventArgs e, string tempfp, string fp, string prompt)
+        {
+            var progress = e as DownloadProgressChangedEventArgs;
+            if (progress != null)
+            {
+                Statics.Logger.Log($"\t\t{fp}\t{progress.ProgressPercentage}%");
+            }
+        }
+
+        /// <summary>
+        /// the first simple dumb text section should be used to track that round of global rejections.
+        /// But there's no need to report later ones since they're fixed.
+        /// </summary>
+        public static string GenerateMeaningfulSummaryOfChosenPromptOptions(OptionsModel optionsModel, IEnumerable<InternalTextSection> sections)
+        {
+            var res = "";
+            res = string.Join(",", sections.Select(el => el.GetValueForHumanConsumption().Trim().Replace("\r\n", " ")).ToArray());
+            return res;
+        }
+
+        public static async Task<bool> HandleOpenAIException(OptionsModel optionsModel, Exception ex, ImageGenerationRequest req, string destFp, IEnumerable<InternalTextSection> textSections)
+        {
+            var shortPrompt = req.Prompt.Substring(0, Math.Min(50, req.Prompt.Length));
+            if (ex.Message.Contains("Your request was rejected as a result of our safety system. Your prompt may contain text that is not allowed by our safety system."))
+            {
+                UpdateWithFilterResult(optionsModel, textSections, TextChoiceResultEnum.PromptRejected);
+                System.IO.File.Delete(destFp);
+                await Task.Delay(2 * 1000);
+            }
+            else if (ex.Message.Contains("Your request was rejected as a result of our safety system. Image descriptions generated from your prompt may contain text that is not allowed by our safety system. If you believe this was done in error, your request may succeed if retried, or by adjusting your prompt."))
+            {
+                UpdateWithFilterResult(optionsModel, textSections, TextChoiceResultEnum.ImageDescriptionsGeneratedBad);
+                System.IO.File.Delete(destFp);
+                await Task.Delay(2 * 1000);
+            }
+            else if (ex.Message.Contains("This request has been blocked by our content filters."))
+            {
+                UpdateWithFilterResult(optionsModel, textSections, TextChoiceResultEnum.RequestBlocked);
+                System.IO.File.Delete(destFp);
+                await Task.Delay(2 * 1000);
+            }
+            else if (ex.Message.Contains("\"Rate limit exceeded for images per minute in organization"))
+            {
+                optionsModel.IncStr("RateLimit");
+                System.IO.File.Delete(destFp);
+                await Task.Delay(10 * 1000);
+            }
+            else if (ex.Message.Contains("\"Billing hard limit has been reached\""))
+            {
+                optionsModel.IncStr("BillingLimit");
+                Statics.Logger.Log(ex.Message);
+                System.IO.File.Delete(destFp);
+                return true;
+            }
+            else if (ex.Message.Contains("invalid_request_error") && ex.Message.Contains(" is too long - \'prompt\'"))
+            {
+                optionsModel.IncStr("TooLong");
+                Statics.Logger.Log($"Your prompt was {req.Prompt.Length} characters and it started: \"{shortPrompt}...\". This is too long. The actual limit is 4000.");
+                System.IO.File.Delete(destFp);
+            }
+            else if (ex.Message.Contains("Rate limit repeatedly exceeded"))
+            {
+                optionsModel.IncStr("RateLimitRepeatedlyExceeded");
+                Statics.Logger.Log($"You blew up the rate limit unfortunately.");
+                Statics.Logger.Log($"{GetMessageLine(ex.Message)}");
+                System.IO.File.Delete(destFp);
+            }
+            else
+            {
+                optionsModel.IncStr("Unknown.");
+                Statics.Logger.Log($"\tUnknownException.\t\"{shortPrompt}\"\r\n{ex}");
+                Statics.Logger.Log($"{GetMessageLine(ex.Message)}");
+                System.IO.File.Delete(destFp);
+            }
+            return false;
+        }
+
+        public static string Slice(string input, int take)
+        {
+            if (take < input.Length)
+            {
+                return input.Substring(0, Math.Min(input.Length, take)).Trim()+$"...(+{input.Length-take})";
+            }
+            return input.Substring(0, Math.Min(input.Length, take)).Trim();
         }
     }
 }

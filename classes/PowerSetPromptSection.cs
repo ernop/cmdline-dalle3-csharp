@@ -16,6 +16,7 @@ namespace Dalle3
     {
         public int MinToReturn { get; set; } = 0;
         public int MaxToReturn { get; set; } = int.MaxValue;
+
         public PowerSetPromptSection(string s)
         {
             var rangeRe = new Regex(@"^(\d+)-(\d+),");
@@ -40,27 +41,21 @@ namespace Dalle3
         }
 
         /// <summary>
-        /// fake iteration?
+        /// okay, this doesn't actually work since now even when allegedly iterating, we actually just pick a random value.
+        /// TODO fix it once I figure out how it should be. when there are multiple different types, it gets complicated on how to iterate right.
+        /// In general I suppose a global looping behavior is good, but even then, not perfect.
         /// </summary>
-        private int currentN { get; set; } = 0;
-
         public InternalTextSection Next()
         {
-            currentN++;
-
             try
             {
-                return Statics.GetNthPowersetValue(Contents, currentN - 1);
+                return Statics.GetNthPowersetValue(Contents, Statics.Random.Next(0, (1<<Contents.Count-1)));
             }
             catch
             {
                 throw new IterException(nameof(PowerSetPromptSection));
             }
 
-        }
-        public InternalTextSection Current()
-        {
-            return Statics.GetNthPowersetValue(Contents, currentN - 1);
         }
 
         public override string ToString()

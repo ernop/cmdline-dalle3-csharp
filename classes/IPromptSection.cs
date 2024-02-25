@@ -15,7 +15,6 @@ namespace Dalle3
         /// Next over all possible values.
         /// </summary>
         InternalTextSection Next();
-        InternalTextSection Current();
         int GetCount();
 
         /// <summary>
@@ -26,6 +25,6 @@ namespace Dalle3
         /// <summary>
         /// Outputting basic content filtering, etc. types of things.
         /// </summary>
-        string ReportResults();
+        string ReportResults(bool includeGlobal);
     }
 }

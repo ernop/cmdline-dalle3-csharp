@@ -7,6 +7,7 @@ using System.Drawing.Drawing2D;
 using static Dalle3.Statics;
 using Image = System.Drawing.Image;
 using System.Linq;
+using System.Text;
 
 public class Annotator
 {
@@ -27,7 +28,9 @@ public class Annotator
     public List<string> GetTextInLines(string text, int pixelWidth)
     {
         //for some reason we need a "real" graphics object to calculate text widths based off of.
-        var remainingText = text.Trim();
+        //okay so sometimes things show up with a variety of weird newlines. Basically I want to coalesce all of those into a standard set.        
+        var remainingText = CoalesceAllNewlineLikeSections(text);
+
         var parts = remainingText.Split(new string[] { "\r\n" }, StringSplitOptions.None);
         var lines = new List<string>();
 
@@ -66,7 +69,7 @@ public class Annotator
                     var w2 = FakeGraphics.MeasureString(joined, Font);
                     if (w2.Width < pixelWidth)
                     {
-                        words = words.Skip(words.Count()- wordsToSkipAtEnd).ToArray();
+                        words = words.Skip(words.Count() - wordsToSkipAtEnd).ToArray();
                         remainingTextThisLine = string.Join(" ", words);
                         lines.Add(joined);
                         shouldRetryAllSplitAttemptsFromBeginning = true;
@@ -114,6 +117,48 @@ public class Annotator
         return lines;
     }
 
+    public static string CoalesceAllNewlineLikeSections(string input)
+    {
+        //the input may have sections of \r, \n, \n\n, \r\n, etc. and we want to convert the entirety ofa ny such contiguous section to a single one.
+        //we do this so they don't get doubled up.
+        input = input.Replace("\r\n", "\n").Replace("\r","\n");
+
+        var parts = input.Split(new string[] { "\r", "\n", "|||" }, StringSplitOptions.None);
+        var sb = new StringBuilder();
+        foreach (var part in parts)
+        {
+            if (string.IsNullOrWhiteSpace(part))
+            {
+                sb.Append("\r\n");
+            }
+            else
+            {
+                sb.Append(part+"\r\n");
+            }
+        }
+
+        var res = sb.ToString();
+
+        var any = false;
+
+        //condense any 2+ empty lines into 2.
+        while (true)
+        {
+            any = false;
+            if (res.IndexOf("\r\n\r\n\r\n") != -1)
+            {
+                res = res.Replace("\r\n\r\n\r\n", "\r\n\r\n");
+                any = true;
+            }
+            if (!any)
+            {
+                break;
+            }
+        }
+
+        return res;
+    }
+
     /// <summary>
     /// Annotate an image file at source with black text and a light text below (optional), expanding the height of the image and
     /// trying not to lose any pixels.
@@ -151,10 +196,8 @@ public class Annotator
         {
             var pos = (float)Math.Floor((double)(originalImageYHeightPixels + ii * LineSize));
             graphics.DrawString(line, Font, brush, new PointF(0, pos));
-
             ii += 1;
         }
-
         if (includeSourceLabel)
         {
             //add my watermarking etc here.  Slightly annoying since to be perfect I should maybe calculate the remaining Y space left for my small annotation?
@@ -175,7 +218,6 @@ public class Annotator
             Console.WriteLine($"File already exists. Not overwriting. fp: {destFp}");
         }
         im.Save(destFp);
-        //Logger.Log($"Saved annotated version. fp: {destFp}");
         return destFp;
     }
 }

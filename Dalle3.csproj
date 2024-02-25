@@ -65,6 +65,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="classes\Alias.cs" />
+    <Compile Include="classes\Getter.cs" />
     <Compile Include="classes\InternalTextSection.cs" />
     <Compile Include="Infra\Annotate.cs" />
     <Compile Include="classes\Aliases.cs" />

@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Runtime.Remoting.Contexts;
 
+using static Dalle3.Statics;
+
 namespace Dalle3
 {
     public class TextPromptSection : IPromptSection
@@ -9,6 +11,8 @@ namespace Dalle3
         private InternalTextSection S { get; set; }
         private int BadCount { get; set; } = 0;
         private int GoodCount { get; set; } = 0;
+        private Dictionary<string, int> GoodCounts { get; } = new Dictionary<string, int>();
+        private Dictionary<string, int> BadCounts { get; } = new Dictionary<string, int>();
         public TextPromptSection(string s)
         {
             S = new InternalTextSection(s, s, true, this);
@@ -27,20 +31,31 @@ namespace Dalle3
 
         public void ReceiveChoiceResult(InternalTextSection section, TextChoiceResultEnum result)
         {
-            //Console.WriteLine($"I am a thingie and for \"{choice.Substring(0,20)}...\" I got {result}");
+            if (!GoodCounts.ContainsKey(section.L))
+            {
+                GoodCounts[section.L] = 0;
+            }
+            if (!BadCounts.ContainsKey(section.L))
+            {
+                BadCounts[section.L] = 0;
+            }
             switch (result)
             {
                 case TextChoiceResultEnum.RequestBlocked:
                     BadCount++;
+                    BadCounts[section.L]++;
                     break;
                 case TextChoiceResultEnum.PromptRejected:
                     BadCount++;
+                    BadCounts[section.L]++;
                     break;
-                case TextChoiceResultEnum.DescriptionsBad:
+                case TextChoiceResultEnum.ImageDescriptionsGeneratedBad:
                     BadCount++;
+                    BadCounts[section.L]++;
                     break;
                 case TextChoiceResultEnum.Okay:
                     GoodCount++;
+                    GoodCounts[section.L]++;
                     break;
                 case TextChoiceResultEnum.RateLimit:
                     break;
@@ -58,17 +73,16 @@ namespace Dalle3
 
         }
 
-        public string ReportResults()
+        public string ReportResults(bool includeGlobal)
         {
-            var res = $"\t{S.L}";
-            if (GoodCount == 0 && BadCount == 0)
+            var res = "";
+            if (includeGlobal)
             {
-                res += "";
+                res += $"\r\n\tGLOBAL{(100 * BadCount / (1.0 * BadCount + GoodCount)):0.0}b%. (b: {BadCount}, g: {GoodCount})";
             }
-            else
+            if (GoodCount > 0 || BadCount > 0)
             {
-                res += $"\t{(100 * BadCount / (1.0 * BadCount + GoodCount)):0.0}b%. (b: {BadCount}, g: {GoodCount}) Do you actually need this? its a static text section.";
-                res = $"\t{S.L}";
+                res += $"\r\n\t{Slice(S.L, SliceAmount)}";
             }
             return res;
         }

@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 
+using static Dalle3.Statics;
+
 namespace Dalle3
 {
     /// <summary>
@@ -52,7 +54,6 @@ namespace Dalle3
             //i need to reconstruct which of the original internalTextSections were included.
             //given that there are limitations, that is possible, but seems wrong.
 
-            //Console.WriteLine($"I am a thingie and for {choice} I got {result}");
             if (!GoodCounts.ContainsKey(section.L))
             {
                 GoodCounts[section.L] = 0;
@@ -71,7 +72,7 @@ namespace Dalle3
                     BadCount++;
                     BadCounts[section.L]++;
                     break;
-                case TextChoiceResultEnum.DescriptionsBad:
+                case TextChoiceResultEnum.ImageDescriptionsGeneratedBad:
                     BadCount++;
                     BadCounts[section.L]++;
                     break;
@@ -94,35 +95,33 @@ namespace Dalle3
             }
         }
 
-        public string ReportResults()
+        //display the block/try rate for each of our subcomponents
+        public string ReportResults(bool includeGlobal)
         {
-            var res = "\t";
-            if (GoodCount == 0 && BadCount == 0)
+            var res = "";
+            if (includeGlobal)
             {
-                res += " None yet.";
+                res += $"\r\n\tGLOBAL{(100.0 * BadCount / (1.0 * BadCount + GoodCount)):0.0}b% (b:{BadCount} g: {GoodCount})";
             }
-            else
+
+            if (GoodCount > 0 || BadCount > 0)
             {
-                res += $"Overall: {(100.0 * BadCount / (1.0 * BadCount + GoodCount)):0.0}b% (b:{BadCount} g: {GoodCount})";
-                var reorder = new List<Tuple<int, InternalTextSection>>();
+                var reorder = new List<Tuple<int,string, InternalTextSection>>();
                 foreach (var content in Contents)
                 {
-                    int bk = 0;int gk = 0;
-                    var gotBad = BadCounts.TryGetValue(content.L, out bk);
-                    var gotGood = GoodCounts.TryGetValue(content.L, out gk);
-                    if (bk + gk > 0)
+                    int bc = 0; 
+                    int gc = 0;
+                    var gotBad = BadCounts.TryGetValue(content.L, out bc);
+                    var gotGood = GoodCounts.TryGetValue(content.L, out gc);
+                    if (bc + gc > 0)
                     {
-                        var perc = 100.0 * bk / (bk + gk);
-                        reorder.Add(new Tuple<int, InternalTextSection>((int)perc, content));
-                    }
-                    else
-                    {
-                        reorder.Add(new Tuple<int, InternalTextSection>((int)0, content));
+                        var perc = 100.0 * bc / (bc + gc);
+                        reorder.Add(new Tuple<int, string, InternalTextSection>((int)perc, $"{gc}/{(gc+bc)}", content));
                     }
                 }
                 foreach (var tuple in reorder.OrderByDescending(el => el.Item1))
                 {
-                    res += $"\r\n\t\t{tuple.Item1:0.0}b%\t{tuple.Item2} ";//({BadCounts[tuple.Item2.L] + GoodCounts[tuple.Item2.L]})
+                    res += $"\r\n\t{tuple.Item1:0.0}b%\t{tuple.Item2}\t{Slice(tuple.Item3.L, SliceAmount)} ";
                 }
             }
             return res;

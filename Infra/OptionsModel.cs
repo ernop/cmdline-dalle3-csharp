@@ -1,13 +1,18 @@
 ﻿using OpenAI_API.Images;
 
+using System;
 using System.Collections.Generic;
 
 namespace Dalle3
 {
-    class OptionsModel
+
+    /// <summary>
+    /// Data on a "run" of a specific prompt which may be blown up into tons of prompts.
+    /// </summary>
+    public class OptionsModel
     {
         public string RawPrompt { get; set; }
-        public IEnumerable<IPromptSection> PromptSections{ get; set; }
+        public IEnumerable<IPromptSection> PromptSections { get; set; }
         public bool IncludeNormalImageOutput { get; set; }
         public bool IncludeAnnotatedImageOutput { get; set; }
 
@@ -20,6 +25,28 @@ namespace Dalle3
 
         //hd, standard
         public string Quality { get; set; } = "standard";
+
+        public Dictionary<string, int> Results { get; private set; } = new Dictionary<string, int>();
+
+        public void IncStr(string key)
+        {
+            if (Results == null)
+            {
+                Results = new Dictionary<string, int>();
+            }
+            if (!Results.ContainsKey(key))
+            {
+                try
+                {
+                    Results[key] = 0;
+                }
+                catch (Exception ex)
+                {
+                    var a = 3;
+                }
+            }
+            Results[key]++;
+        }
 
     }
 

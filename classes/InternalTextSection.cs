@@ -1,4 +1,4 @@
-﻿using System.Runtime.Remoting.Contexts;
+﻿using static Dalle3.Statics;
 
 namespace Dalle3
 {
@@ -11,6 +11,9 @@ namespace Dalle3
     /// </summary>
     public class InternalTextSection
     {
+        /// <summary>
+        /// generally only used for things like {GPTLocations}, as a quick alias.
+        /// </summary>
         public string S { get; set; }
         public string L { get; set; }
         public bool IsSingle { get; set; }
@@ -20,18 +23,18 @@ namespace Dalle3
         {
             if (IsSingle)
             {
-                return S;
+                return Slice(S,SliceAmount);
             }
             else
             {
                 if (S == L)
                 {
                     //I guess this is the case where we don't expand.
-                    return S;
+                    return Slice(S, SliceAmount);
                 }
 
                 //this is where it's more like an abbreviation.
-                return $"{S}:{L}";
+                return $"{Slice(S, SliceAmount)}:{Slice(L, SliceAmount)}";
             }
         }
         public InternalTextSection(string s, string l, bool isSingle, IPromptSection parent)
