@@ -1,7 +1,5 @@
 # What is this? 
 
-## main functions: 
-
  * command line tool for asynchronously creating tons of images with your OpenAI key via Dalle3, based on a prompt you enter
  * optional prompt syntax for quickly generating tons of variations of a prompt (use {A,,B,C...} and exactly one of the inner items will be chosen. Use [A, B, C] and a subset will be chosen, from 0,1,..all 3 of them, in random order. 
  * automatic saving of raw and annotated images to easily share both your input prompt and the test got revised it to before sending to Dalle3.
