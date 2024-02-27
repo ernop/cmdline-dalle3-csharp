@@ -8,7 +8,7 @@
 "-20 A {naughty, obedient} cat"
 this will generate 20 images from that prompt, each time random sending either a naughty cat or an obedient cat.
 
-"-hd -h -10" will generate hd horizontal images. 
+"-hd -h -10 a fat cat in {GPTArtstyles} will generate ten hd horizontal images of a fat cat, each in a different randomly chosen style. 
 
 ## Details 
 welcome. this is a command line c sharp application which you can use to communicate with Open AIs image creation endpoint in a more large scale way. it features the ability to control and monitor how many times you submit a prompt the failure or block rate of your attempts, and the ability to easily explore latent space by submitting the permutations which will be explored for you automatically in different combinations and also to submit part of your prompt as a power set. that is, the program will gradually explore all possible subsets of the items in that section of the prompt. this is useful for breaking the GPT layer of the input prompt conversion process out of ruts on getting it to expand and explore more unique possibilities.
