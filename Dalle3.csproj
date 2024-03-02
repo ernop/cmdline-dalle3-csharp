@@ -5,7 +5,7 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{BC7DE14B-596F-4948-8F40-39D43CD80955}</ProjectGuid>
-    <OutputType>Exe</OutputType>
+    <OutputType>Library</OutputType>
     <RootNamespace>Dalle3</RootNamespace>
     <AssemblyName>Dalle3</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
@@ -52,6 +52,9 @@
     <ErrorReport>prompt</ErrorReport>
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject />
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -73,12 +76,10 @@
     <Compile Include="Infra\Log.cs" />
     <Compile Include="classes\MetaPromptSection.cs" />
     <Compile Include="Infra\OptionsModel.cs" />
-    <Compile Include="Infra\OverridePrompts.cs" />
     <Compile Include="Infra\Parser.cs" />
     <Compile Include="classes\PermutationPromptSection.cs" />
     <Compile Include="classes\PowerSetPromptSection.cs" />
     <Compile Include="IterException.cs" />
-    <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Infra\Statics.cs" />
     <Compile Include="Infra\TextChoiceResultEnum.cs" />

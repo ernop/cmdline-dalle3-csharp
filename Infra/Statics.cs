@@ -2,20 +2,48 @@
 
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Net;
+using System.Net.NetworkInformation;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Dalle3
 {
-    internal static class Statics
+    public static class Statics
     {
-        public static Logger Logger = new Logger("../../logs/log.txt");
+        /// <summary>
+        /// fix this later, for now, your consumers just have to call this.
+        /// </summary>
+
+        public static void Setup(string loggerPath, string fakeGraphicsPath)
+        {
+            if (Logger == null)
+            {
+                Logger = new Logger(loggerPath);
+            }
+
+            if (!System.IO.File.Exists(fakeGraphicsPath))
+            {
+                Logger.Log($"Error: the fp you sent for the fake garphics object we need for setup doesn't work. There should be any png at: {fakeGraphicsPath}");
+                throw new Exception("put a file there.");
+            }
+            FakeGraphics = Graphics.FromImage(new Bitmap(fakeGraphicsPath));
+        }
+
+        public static Graphics FakeGraphics { get; set; }
+
+        public static Logger Logger { get; set; }
+        
+        /// <summary>
+        /// for formatting names in human readable logs and stuff
+        /// </summary>
         public static int SliceAmount { get; } = 50;
+
+        //how to split up sections of complex prompts
         public static string MetaPromptDivider { get; } = ",,";
-        public static string ApiKey { get; set; } = System.IO.File.ReadAllText("../../apikey.txt");
-        public static string OrgId { get; set; } = System.IO.File.ReadAllText("../../organization.txt");
+
         public static Random Random = new Random();
 
         /// <summary>
@@ -24,11 +52,10 @@ namespace Dalle3
         /// This data is current as of 2/2024 but will probably change.
         /// TODO obviously, put this into a config file so its easier to manage.
         /// </summary>
-        public static int MyOpenAiTier { get; set; } = 4;
 
-        public static int GetMyImagesPerMinuteRateLimit()
+        public static int GetMyImagesPerMinuteRateLimit(int tier)
         {
-            switch (MyOpenAiTier)
+            switch (tier)
             {
                 case 0:
                     return 1;
@@ -253,7 +280,7 @@ namespace Dalle3
 
         public static InternalTextSection PickRandomPowersetValue(IEnumerable<InternalTextSection> items, int minToReturn, int maxToReturn)
         {
-            var actualNumberOfValuesToReturn = Random.Next(minToReturn, Math.Min(items.Count()+1,maxToReturn + 1));
+            var actualNumberOfValuesToReturn = Random.Next(minToReturn, Math.Min(items.Count() + 1, maxToReturn + 1));
             var res = GetNthPowersetValue(items, actualNumberOfValuesToReturn);
             return res;
         }
@@ -276,7 +303,7 @@ namespace Dalle3
                 subset.Add(items.Skip(indices[ii]).First());
             }
 
-            var joined = string.Join(Statics.MetaPromptDivider , subset.Select(el => el.L));
+            var joined = string.Join(Statics.MetaPromptDivider, subset.Select(el => el.L));
             var its = new InternalTextSection(joined, joined, false, null);
             return its;
         }
@@ -320,7 +347,7 @@ namespace Dalle3
         /// <param name="optionsModel"></param>
         public static void DoReport(OptionsModel optionsModel)
         {
-            var orderedKeys = new List<string>() { "RequestedCount", "Okay", "Error",  };
+            var orderedKeys = new List<string>() { "RequestedCount", "Okay", "Error", };
             foreach (var k in optionsModel.Results.Keys.OrderByDescending(el => (optionsModel.Results[el], el)))
             {
                 if (orderedKeys.IndexOf(k) == -1)
@@ -446,7 +473,7 @@ namespace Dalle3
         {
             if (take < input.Length)
             {
-                return input.Substring(0, Math.Min(input.Length, take)).Trim()+$"...(+{input.Length-take})";
+                return input.Substring(0, Math.Min(input.Length, take)).Trim() + $"...(+{input.Length - take})";
             }
             return input.Substring(0, Math.Min(input.Length, take)).Trim();
         }

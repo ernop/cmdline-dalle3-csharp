@@ -11,7 +11,6 @@ using System.Text;
 
 public class Annotator
 {
-    public Graphics FakeGraphics { get; set; } = Graphics.FromImage(new Bitmap("../../image.png"));
 
     public static int LineYPixels { get; set; } = 30;
 

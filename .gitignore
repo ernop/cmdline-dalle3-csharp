@@ -12,3 +12,8 @@ apikey.txt
 /UI/Dalle3UI/.vs
 /UI/Dalle3UI
 /logs/log2.txt
+/Dalle3Exe/bin/Debug
+/Dalle3Exe/obj
+/Dalle3Exe/logs
+/Dalle3Exe/organization.txt
+/dead-ui-stuff-from-csproj.txt

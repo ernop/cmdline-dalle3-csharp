@@ -9,7 +9,7 @@ namespace Dalle3
     /// <summary>
     /// This is a fake exception that is used to signal that we are done iterating.
     /// </summary>
-    internal class IterException : Exception
+    public class IterException : Exception
     {
         public IterException(string s) : base(s)
         {
