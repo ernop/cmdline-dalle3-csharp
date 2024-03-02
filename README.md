@@ -1,3 +1,29 @@
+# What is this? 
+
+ * command line tool for asynchronously creating tons of images with your OpenAI key via Dalle3, based on a prompt you enter
+ * optional prompt syntax for quickly generating tons of variations of a prompt (use {A,,B,C...} and exactly one of the inner items will be chosen. Use [A, B, C] and a subset will be chosen, from 0,1,..all 3 of them, in random order. 
+ * automatic saving of raw and annotated images to easily share both your input prompt and the test got revised it to before sending to Dalle3.
+
+## Examples 
+"-20 A {naughty, obedient} cat"
+this will generate 20 images from that prompt, each time random sending either a naughty cat or an obedient cat.
+
+"-hd -h -10 a fat cat in {GPTArtstyles} will generate ten hd horizontal images of a fat cat, each in a different randomly chosen style. 
+
+## Details 
+welcome. this is a command line c sharp application which you can use to communicate with Open AIs image creation endpoint in a more large scale way. it features the ability to control and monitor how many times you submit a prompt the failure or block rate of your attempts, and the ability to easily explore latent space by submitting the permutations which will be explored for you automatically in different combinations and also to submit part of your prompt as a power set. that is, the program will gradually explore all possible subsets of the items in that section of the prompt. this is useful for breaking the GPT layer of the input prompt conversion process out of ruts on getting it to expand and explore more unique possibilities.
+
+the program also contains a few built-in aliases for things like interesting art styles or compositions or locations. for example, instead of doing" a cute little cat" you can do" a cute little cat. {GPTArtstyles}. That is an alias for approximately 500 different types of visual art from simple on such as oil, painting, abstract, watercolor, Byzantine, Mosaic, art, onto more obscure ones like Lucy sombres and aromatic smudged Japanese street, calligraphy; a different one will be chosen for each image. 
+
+You would submit that prompt on the command line, or you'd edit the file called OverridePrompr.cs and then run the program. the UI displays  but your queries as they're made asynchronously , speed depending on the tier which you've reached at OpenAI which is what controls the rate limit that they'll impose on you. as your requests are accepted, the UI will update you successfully saved images as well as blocked, rejected or failed images. breakdowns here go to the individually selected option so you can wll if one word is blocked more than another. 
+
+###Annotation
+
+we save three versions of the image Dalle3 makes:
+ * the original
+ * original plus rewritten prompt
+ * original plus your prompt plus rewritten
+
 ### Next version
 
 * refactoring stuff, mainly fixing reporting and progress of how things work
