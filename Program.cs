@@ -112,7 +112,7 @@ namespace Dalle3
                 //so fix it here for tracking.
                 req.Quality = optionsModel.Quality;
 
-                req.Prompt = string.Join("", textSections.Select(el => el.L));
+                req.Prompt = string.Join("", textSections.Select(el => el.L)).Replace(",,",", "); //HACK because we still use ,, as a way to tag fake ITS which are assembled from powerset sections.
                 req.Size = optionsModel.Size;
                 var humanReadable = string.Join("_", textSections.Select(el => el.GetValueForHumanConsumption().Trim())).Replace(',', '_');
 
@@ -136,18 +136,9 @@ namespace Dalle3
 
                 //okay, looking at how threads get used, a lot of this may be unsafe. Because apparently even if I try to stay single threaded,
                 //and only use the async awaits to have the main thread work while others are waiting/downloading, there can apparently still be multiple coming in.
-                //I shoudl test that. anyway, don't rely on this block being guarded.
+                //I should test that. anyway, don't rely on this block being guarded.
                 var task = Task.Run(async () =>
                 {
-                    //var req2 = new CompletionRequest();
-                    //req2.
-                    //api.Completions.CreateCompletionAsync()
-                    //req2.
-                    //api.ImageGenerations.CreateImageAsync(req2);
-                    //client.DownloadProgressChanged += (sender, e) => DownloadProgressHappened(sender, e, tempFp, fp, req.Prompt);
-
-                    //this is the final destination; in actuality we will temporarily store them up one folder!
-                    //also we reserve this location with something.
                     var destFp = Statics.PromptToDestFpWithReservation(req, humanReadable, taskId);
                     var tempFp = $"{Path.GetTempPath()}{taskId}.png";
 
@@ -171,7 +162,6 @@ namespace Dalle3
                             client.DownloadFileCompleted += (sender, e) => Getter.DownloadCompleted(sender, e, optionsModel, tempFp, destFp, req.Prompt, revisedPrompt, textSections);
 
                             client.DownloadFileAsync(new Uri(url), tempFp);
-                            //Statics.Logger.Log($"Generated image for the complete prompt: {Statics.GenerateMeaningfulSummaryOfChosenPromptOptinos(optionsModel, textSections)}");
                         }
                     }
 
@@ -182,7 +172,7 @@ namespace Dalle3
                         optionsModel.IncStr("Error");
 
                         billingBreak = await HandleOpenAIException(optionsModel, ex, req, destFp, textSections);
-                        DoReport(optionsModel);
+                        //DoReport(optionsModel);
                     }
                     finally
                     {
@@ -204,6 +194,7 @@ namespace Dalle3
             await Task.WhenAll(tasks);
             Statics.Logger.Log("\r\n===============FinalReport=============\r\n");
             DoReport(optionsModel);
+            //Console.ReadLine();
         }
     }
 }

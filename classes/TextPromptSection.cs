@@ -78,7 +78,7 @@ namespace Dalle3
             var res = "";
             if (includeGlobal)
             {
-                res += $"\r\n\tGLOBAL{(100 * BadCount / (1.0 * BadCount + GoodCount)):0.0}b%. (b: {BadCount}, g: {GoodCount})";
+                res += $"\r\n\t GLOBAL{(100 * BadCount / (1.0 * BadCount + GoodCount)):0.0}b%. (b: {BadCount}, g: {GoodCount})";
             }
             if (GoodCount > 0 || BadCount > 0)
             {

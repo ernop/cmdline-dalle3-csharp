@@ -100,14 +100,14 @@ namespace Dalle3
                 revisedAnnotationFp = rDirectory + "/revised/" + rFilename;
 
                 ann.Annotate(destFp, revisedAnnotationFp, revisedPrompt, true);
-                Statics.Logger.Log($"Saved revised version. fp: {revisedAnnotationFp}");
-                DoReport(optionsModel);
+                Statics.Logger.Log($"Saved to: {revisedAnnotationFp}");
+                //DoReport(optionsModel);
             }
             catch (Exception ex)
             {
                 Statics.Logger.Log("weird error." + ex.ToString());
                 optionsModel.IncStr("ErrorCount");
-                DoReport(optionsModel);
+                //DoReport(optionsModel);
             }
         }
     }

@@ -14,7 +14,7 @@ namespace Dalle3
         public static IEnumerable<IPromptSection> ParseInput(string input)
         {
             var parts = new List<IPromptSection>();
-            var regex = new Regex(@"\{[^\}]*\}|\[[^\]]*\]");
+            var regex = new Regex(@"\{[^\}]+\}|\[[^\]]+\]");
 
             int lastIndex = 0;
             var matches = regex.Matches(input);

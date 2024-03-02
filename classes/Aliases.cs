@@ -15,6 +15,8 @@ namespace Dalle3
 
         public static List<Alias> GetAliases()
         {
+            var strangeEffects = new Alias("GPTStrange", "unclear image, a strange image, pixellated, made of food, badly photoshopped, as if a blind person organized it, wearing clothing no adult would ever wear, unbelievably strange, cruelly drawn, wasteful, awful, terrifyingly tiny, miniaturely lilliputian, hundreds of dogs everywhere, hundreds of spiders everywhere, entire world is furry, completely charred and destroyed and burned down, everything is made of emojis, extremely distorted emoji heads, hidden faces and eyes everywhere, super distortion mode, realistic chibi style, realistic roblox style, super blurry, lost footage restored from 1800 colorized, over-colorized ancient movie style, badly drawn amateur art, in the style of 4chan mspaint memes, as if drawn in mspaint, in the style of deviantart, as if it was a magic card illustration, made of dripped melted wax, art you would see in walmart");
+
             var protagonists = new Alias("GPTProtagonists", "lightning, lava, lasers, dinosaurs, volcanos, magma, explosions, constellations, " +
                 "waterfalls, melting ice walls, numinosity, cumulonimbus cloud banks, thunderstorms, ball lightning, will'o'the wisps, " +
                 "disappearing horsemen, native wild horses, " +
@@ -186,12 +188,12 @@ namespace Dalle3
                 " Conceptual space exploration, Constable-inspired pastoral, Constructivist, Coral assemblage, Coral reef painting, Cosmic, Cosmic art, Cosmic photography, Courbet-like realism, " +
                 "Crackle glaze, Cubism, Cubist, Cubist figure, Cyanotype print, Cybernetic, Cybernetic organism, Cyberpunk, Cézannesque geometric, Da Vincian intricate, Dada, Daliesque surreal," +
                 " Danza butoh visual, Danza contemporánea (Spanish),contemporary dance., Deco, Deco elegance, Dibujo carboncillo expresivo, Digital 3D, Digital fabric weaving, Digital mosaic, " +
-                "Digital painting, Digital vector graphics, Dot painting, Dreamy, Dreamy landscape, Drybrush technique, Dystopian landscape sketch, Ebru sanatı, Eco, Eco-friendly sculpture, " +
+                "Digital painting, Digital vector graphics, Dot painting, Dreamy, Dreamy landscape, Drybrush technique, Dystopian landscape sketch, Ebru sanatı, Ecologicalism, Eco-friendly sculpture, " +
                 "Eco-sculpture, Embroidered, Embroidered fabric, Embroidery, En plein air, Encaustic painting, Ephemeral sand portraits, Escheresque impossible, Escultura hielo luminoso," +
                 " Escultura reciclaje innovador, Estampa ukiyo-e, Ethereal, Ethereal glass sculpture, Ethereal vision, Experimental shadow theater, Expressionist, Fabric batik, Fauvist, " +
                 "Faux finish, Feather art, Felted wool landscapes, Fiber optic tapestry, Filigrana italiana, Fire ink drawing, Floral arrangement, Fluid art, Fluorescent body art, Folk, " +
                 "Folk embroidery, Food carving, Fotografía callejera monocromo, Fractal laser etching, Fresco, Fridaesque personal, Futurist, Futuristic, Futuristic skyline, " +
-                "Galactic spray paint, Gauguinesque exotic, Geodesic dome mural, Geometric, Glacial, Glacial sculpture, Glass blowing, Glass etching, Glitch, Glowing ice sculpture, Gold leaf, " +
+                "Galactic spray paint, Gauguinesque exotic, Geodesic dome mural, Geometric, Glacial, Glacial sculpture, Glass blowing, Glass etching, Glitch overload, Glowing ice sculpture, Gold leaf, " +
                 "Gothic, Gothic cathedral, Goyesque grotesque, Grabado linóleo detallado, Graffiti, Graffiti wall, Graffito, Gravura em madeira,Gyotaku fish print, Hand-dyed fabric art, " +
                 "Handmade paper making, Handwoven light patterns, Haptic VR art, Haute couture,Highbrow, Highbrow, Highbrow critique, Hokusai-inspired wave, " +
                 "Holographic art, Holographic display, Holographic street art, Hopperesque solitude, Hyperbolic tessellation art, Hyperreal, Hyperrealism sketch, Ice, " +
@@ -209,7 +211,7 @@ namespace Dalle3
                 "Nihonga, Noir, Noir mystery, O'Keeffesque enlarged, Optical, Optical art, Optical illusion, Organic ceramic forms, Origami, Origami crane, Origami tessellation, Paisaje sonoro urbano, " +
                 "Panoramic digital fresco, Papel picado mexicano, Paper cutting, Paper mâché, Paper quilling, Papiroflexia modular avanzada, Parchment scroll, Pastel, Pastel drawing, Peinture abstraite," +
                 "abstract painting., Peisaj urban (Romanian),urban landscape., Performance art, Performance teatro callejero, Perfume blending, Phosphorescent forest art, Photoreal, Pintura al fresco, " +
-                "Pintura al óleo (Spanish),Pyrography, Pintura sumi-e, Pintura óleo realista, Pirograbado ruso, Pixel, Pixel animation, Pixelated, Pixelated character, Pollock-style drip, Pop, Pop icon, Primitivism, " +
+                "Pintura al óleo (Spanish),Pyrography, Pintura sumi-e, Pintura óleo realista, Pirograbado ruso, Pixel art, Pixel-perfect manual editing, Pixel animation, Pixelated design, Pixelated character, Pollock-style drip, Pop Art, Pop icons, Primitivism, " +
                 "Programmable matter sculpture, Proyección mapping dinámico, Psychedelic, Psychedelic swirl, Qi baishi (齐白石),Chinese ink painting style., Quantum dot canvas, Quilling art, Quilting, Quink art, Raku, " +
                 "Rakú japonés, " +
                 "Raphaelesque serene, Reactive sound mural," +
@@ -223,7 +225,7 @@ namespace Dalle3
                 " Traditional woodblock printing, Tribal, Tribal mask, Trompe l'oeil, Trompe-l'œil,Ukiyo-e, Turner-inspired atmospheric, Técnica collage mixto, Ultraviolet landscape art, Urban, Urban decay photography, " +
                 "Urban sketching, Urban sprawl, Van Goghian swirl, Vaporwave, Vaporwave scene, Vermeeresque light, Vexel illustration, Vintage photo restoration, Virtual sculpture, Vitrail, Vitraux gothique, Warholian pop, " +
                 "Watercolor," +
-                " Watercolor garden, Weaving, Wheatpaste poster, Wire sculpture, Wood carving, Woodblock, Woodblock print, Woodcut, Wool felting, Xylography, Yarn bombing, Yarnbomb, Zen, Zen garden, Zen garden design, " +
+                " Watercolor garden, Weaving, Wheatpaste poster, Wire sculpture, Wood carving, Woodblock, Woodblock print, Woodcut, Wool felting, Xylography, Yarn bombing, Yarnbomb, Zen philosophy and koans, Zen garden, Zen garden design, " +
                 "Zentangle drawing");
 
             var backgrounds = new Alias("GPTBackgrounds",
@@ -312,7 +314,7 @@ namespace Dalle3
                 "super high resolution close-up drawing," +
                 " intensely emotional watercolor, " +
                 "pop poster in Rococo style, " +
-                "Art Nouveau image"+
+                "Art Nouveau image,"+
                 "A photorealistic graphite sketch, " +
                 "A Rococo pastel portrait, " +
                 "Comic book style image in the style of Tom Tomorrow, " +
@@ -421,6 +423,7 @@ namespace Dalle3
                     forts,
                     historySpots,
                     compositionTypes,
+                    strangeEffects,
 
                     adjectives,
                     ///These are for making set decks, and more function as simple terms to refer to variation beyond which we probably don't really need to see.

@@ -13,6 +13,7 @@ namespace Dalle3
     {
         public static Logger Logger = new Logger("../../logs/log.txt");
         public static int SliceAmount { get; } = 50;
+        public static string MetaPromptDivider { get; } = ",,";
         public static string ApiKey { get; set; } = System.IO.File.ReadAllText("../../apikey.txt");
         public static string OrgId { get; set; } = System.IO.File.ReadAllText("../../organization.txt");
         public static Random Random = new Random();
@@ -252,7 +253,7 @@ namespace Dalle3
 
         public static InternalTextSection PickRandomPowersetValue(IEnumerable<InternalTextSection> items, int minToReturn, int maxToReturn)
         {
-            var actualNumberOfValuesToReturn = Random.Next(minToReturn, maxToReturn + 1);
+            var actualNumberOfValuesToReturn = Random.Next(minToReturn, Math.Min(items.Count()+1,maxToReturn + 1));
             var res = GetNthPowersetValue(items, actualNumberOfValuesToReturn);
             return res;
         }
@@ -275,7 +276,7 @@ namespace Dalle3
                 subset.Add(items.Skip(indices[ii]).First());
             }
 
-            var joined = string.Join(",", subset.Select(el => el.L));
+            var joined = string.Join(Statics.MetaPromptDivider , subset.Select(el => el.L));
             var its = new InternalTextSection(joined, joined, false, null);
             return its;
         }
@@ -380,7 +381,7 @@ namespace Dalle3
         public static string GenerateMeaningfulSummaryOfChosenPromptOptions(OptionsModel optionsModel, IEnumerable<InternalTextSection> sections)
         {
             var res = "";
-            res = string.Join(",", sections.Select(el => el.GetValueForHumanConsumption().Trim().Replace("\r\n", " ")).ToArray());
+            res = string.Join(";", sections.Select(el => el.GetValueForHumanConsumption().Trim().Replace("\r\n", " ")).ToArray());
             return res;
         }
 

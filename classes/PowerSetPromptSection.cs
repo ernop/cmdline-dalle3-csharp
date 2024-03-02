@@ -15,11 +15,11 @@ namespace Dalle3
     public class PowerSetPromptSection : MetaPromptSection, IPromptSection
     {
         public int MinToReturn { get; set; } = 0;
-        public int MaxToReturn { get; set; } = int.MaxValue;
+        public int MaxToReturn { get; set; } = int.MaxValue - 1;
 
         public PowerSetPromptSection(string s)
         {
-            var rangeRe = new Regex(@"^(\d+)-(\d+),");
+            var rangeRe = new Regex($@"^(\d+)-(\d+){Statics.MetaPromptDivider}");
             var mm = rangeRe.Match(s);
             if (mm.Success)
             {
@@ -36,8 +36,9 @@ namespace Dalle3
 
         public InternalTextSection Sample()
         {
-            var x = Statics.PickRandomPowersetValue(Contents, MinToReturn, MaxToReturn);
-            return x;
+            var fakeITS = Statics.PickRandomPowersetValue(Contents, MinToReturn, MaxToReturn);
+            fakeITS.Parent = this;
+            return fakeITS;
         }
 
         /// <summary>
@@ -49,7 +50,7 @@ namespace Dalle3
         {
             try
             {
-                return Statics.GetNthPowersetValue(Contents, Statics.Random.Next(0, (1<<Contents.Count-1)));
+                return Statics.GetNthPowersetValue(Contents, Statics.Random.Next(0, (1 << Contents.Count - 1)));
             }
             catch
             {

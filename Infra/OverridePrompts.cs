@@ -30,35 +30,27 @@ namespace Dalle3.Infra
         {
             get
             {
-                //var inp = "A chonky mutant {cassowary,petroglyph,octopus} spaceship floating above the {rainbow, Lightning} surface of jupiter shooting cats eye lasers at aliens and floating and disturbing the wild red misty stone and dust rings";
-                //inp = "a single kanji character for da \"big\", in {golden ink, purple ink, rainbow ink, blue ink, black ink}";
-                //inp = "{watercolor, illustration, pointillism} of {boy, woman, man} in {mystery, romance, science fiction} set {mountains, ocean, desert}. -r";
-                //inp = "{watercolor, illustration, pointillism} of {boy, woman, man} in {mystery, romance, science fiction} set {mountains, ocean, desert}. -r";
-                //inp = "{Watercolor, Illustration, Sprang} of {Boy, Woman, Man} in {Mystery, Romance, Science Fiction} set {Mountains}. -r";
-                //inp = "{huchol art style, stark silhouette extreme chiaroscuro style, reminiscent of the style of dick sprang, similar of the style of paul cesar helleu, in the photographic style of mark shaw} of {Man} in {Mystery, Romance, Science Fiction} set {Mountains}. -r";
-                //inp = "{an 2d overlay paper cutout by william steig, " +
-                //    "a flat 2d incredibly detailed and emotional style cartoon image by arnold lobel and william sprang with a warm glow and nostalgia," +
-                //    "a bright colorful claire wendling engraving, " +
-                //    "a glowing fantastical matt wuerker and tom tomorrow style illustration," +
-                //    "} of {Boy, Woman, Man} in {Science Fiction, Romance} set {Desert, Mountains}.";
-
-                //inp = "A splendid cat in {GPTLocations}";
-                //inp = "“Tiger, one day you will come to a fork in the road,” he said. “And you’re going to have to make a decision about which direction you want to go.” He raised his hand and pointed. “If you go that way you can be somebody. You will have to make compromises and you will have to turn your back on your friends. But you will be a member of the club and you will get promoted and you will get good assignments.” Then Boyd raised his other hand and pointed another direction. “Or you can go that way and you can do something—something for your country and for your Air Force and for yourself. If you decide you want to do something, you may not get promoted and you may not get the good assignments and you certainly will not be a favorite of your superiors. But you won’t have to compromise yourself. You will be true to your friends and to yourself. And your work might make a difference.” He paused and stared into Leopold’s eyes and heart. “To be somebody or to do something. In life there is often a roll call. That’s when you will have to make a decision. To be or to do? Which way will you go?” " +
-                //    "{GPTLocations}" +
-                //    "{GPTStyles}  -r";
-                //inp = "{GPTProtagonists}, {GPTProtagonists}, and {GPTProtagonists} on the left team up to fight {GPTForts} which is on the right in the distance. -h -hd -20";
-                //This is an image of a dome of a large building, which appears to be taken during the evening or night given the dark sky. The dome is adorned with what looks like a Christian cross on top, suggesting the building might have religious significance, likely a church. The dome itself features a vibrant mosaic design with a series of geometric patterns and what appear to be religious symbols, including multiple Star of David motifs, which is commonly associated with Judaism. The colors of the mosaic are primarily blue and gold, with touches of white, and the design incorporates diamond shapes and other angular patterns. Below the dome, the architecture includes rounded arches typical of Romanesque or Byzantine styles, and the building's stonework is visible. A small section of a tree can be seen at the bottom right corner, but it's not a dominant feature of the image. The contrast between the illuminated building and the dark sky accentuates the details and colors of the dome.
-
                 var prompts = new List<string>()
                 {
-                    @" -r -h -hd -20 
-Create a mockup image for a movie about a bank heist! Our main character is reclining on her red lounge/chaise chair, in a recessed conversation pit, 
-waiting for her partner to return anxiously. They plan to immediately leave to a high-class, glamorous ball, and then to europe for a month together right afterwards; they are 
-current located deep in a cabin-like hidden outdoor mansion, far out in the Pacific northwest near an active volcano.", };
+//"A father and his son are in a car accident. The father dies at the scene and the son is rushed to the hospital. At the hospital the surgeon looks at the boy and says \"I can't operate on this boy, he is my son.\" How can this be?",
+
+//"The beholder is a rare and benevolent specimen of its kind, who has developed an interest in psychology and counseling. It uses its eye rays to probe the minds of its patients, and to induce various emotional states that can help them overcome their traumas. The prismatic sphere is a way of ensuring privacy and confidentiality for the sessions, as well as protecting the beholder from any hostile reactions from the people or the authorities.",
+
+//"a small squad of eyeball soldiers, each trained in a different specialty, with its own eyeball weapons, and each with a different body configuration, where his body is also made of eyeballs. Obviously, within nature there are many types of eyeballs, such as cat eyes, lizard, octopus, insect, and many many more. They all appear and are relevant here. Also, think about what weapons would be effective against enemies whose entire bodies are made of eyes? obviously, things which attack the eye, like poking fingers, bright sunlight, etc.",
+
+//"A medieval army lined up to go to battle, except that at within their ranks stand various large {Daschhunds,,Dobermans,,Labradors,,Chickens,,Giants,,Laser Pods,,Teslas,,Eyeball lasers,,Tyrannosauruses} army units. The image is in full day, and very clear and sharp and full of interesting details. God forgive any enemy who will encounter them. The image utilizes {GPTArtstyles} and features extremely long perspective and depth of field, unbelievable sights, distant towers, winding rivers and extremely rough terrain, with symbols of death, life, crucifixes, holiness and purity in the war against the evil.",
+
+@"A cute little platypus pet in the big city! Its poisonous bite, its electrical shock ability, its webbed feet impress all the powerful people who see it in an expensive downtown Beijing Hutong. utilizing {GPTArtstyles} with a hint of {GPTArtstyles}"
+                };
 
                 foreach (var prompt in prompts)
                 {
-                    yield return prompt;
+                    var usePrompt = prompt;
+                    if (prompt.Trim()[0] != '-')
+                    {
+                        usePrompt = $"-r -h -hd -20 " + usePrompt;// + " Also: remember to add in a cute little puppy to this image.";
+                    };
+                    yield return usePrompt;
                 }
 
             }

@@ -13,7 +13,8 @@ public class Annotator
 {
     public Graphics FakeGraphics { get; set; } = Graphics.FromImage(new Bitmap("../../image.png"));
 
-    public static int LineSize { get; set; } = 27;
+    public static int LineYPixels { get; set; } = 30;
+
     public static int FontSize { get; set; } = 18;
     public Font Font { get; set; } = new Font("Gotham", FontSize, FontStyle.Regular);
     public Font LabelFont { get; set; } = new Font("Gotham", FontSize / 2, FontStyle.Bold);
@@ -24,9 +25,13 @@ public class Annotator
     /// <summary>
     /// just split it up into lines based on the width you have to display it in.
     /// Luckily you can easily adjust this to make it wrap around the image some too.
+    /// remainingXPixelsLastLine is so that if you want to jam some stuff in right-aligned along the bottom, you know if you can or not.
+    /// lastLineYHeight this is so we can expand to contain the descenders, etc.
     /// </summary>
-    public List<string> GetTextInLines(string text, int pixelWidth)
+    public List<string> GetTextInLines(string text, int pixelWidth, out int remainingXPixelsLastLine, out int lastLineYHeight)
     {
+        remainingXPixelsLastLine = 0;
+        lastLineYHeight = 0;
         //for some reason we need a "real" graphics object to calculate text widths based off of.
         //okay so sometimes things show up with a variety of weird newlines. Basically I want to coalesce all of those into a standard set.        
         var remainingText = CoalesceAllNewlineLikeSections(text);
@@ -114,6 +119,23 @@ public class Annotator
             }
         }
 
+        //deepTrim
+        while (true)
+        {
+            if (string.IsNullOrEmpty(lines.Last()))
+            {
+                lines.RemoveAt(lines.Count - 1);
+            }
+            else
+            {
+                break;
+            }
+        }
+
+        var llMeasurement = FakeGraphics.MeasureString(lines.Last(), Font);
+        remainingXPixelsLastLine = (int)(pixelWidth - llMeasurement.Width);
+        lastLineYHeight = (int)llMeasurement.Height;
+
         return lines;
     }
 
@@ -121,7 +143,7 @@ public class Annotator
     {
         //the input may have sections of \r, \n, \n\n, \r\n, etc. and we want to convert the entirety of any such contiguous section to a single one.
         //we do this so they don't get doubled up.
-        input = input.Replace("\r\n", "\n").Replace("\r","\n");
+        input = input.Replace("\r\n", "\n").Replace("\r", "\n");
 
         var parts = input.Split(new string[] { "\r", "\n", "|||" }, StringSplitOptions.None);
         var sb = new StringBuilder();
@@ -133,7 +155,7 @@ public class Annotator
             }
             else
             {
-                sb.Append(part+"\r\n");
+                sb.Append(part + "\r\n");
             }
         }
 
@@ -166,22 +188,31 @@ public class Annotator
     public async Task<string> Annotate(string srcFp, string destFp, string text, bool includeSourceLabel)
     {
         var outputOffsetX = 0;
-        var sourceLabelExtraYPixels = 0;
+
+        //the extra amount we increase the image size no matter what to make it so that descenders from the text don't overlap too much.
+        var sourceLabelText = "dalle3-cmdline-csharp";
+        var sourceLabelWidth = FakeGraphics.MeasureString(sourceLabelText, LabelFont);
 
         var inputImageToAnnotate = Image.FromFile(srcFp);
         var outputSize = inputImageToAnnotate.Size;
-        var originalImageYHeightPixels = inputImageToAnnotate.Height;
 
-        var lines = GetTextInLines(text, outputSize.Width);
+        var lines = GetTextInLines(text, outputSize.Width, out int remainingXPixelsLastLine, out int lastLineYHeight);
 
-        if (includeSourceLabel)
+        var labelExtraYPixels = 0.0f;
+
+        var lastLineOverhangYPixels = Math.Max(lastLineYHeight - LineYPixels, 0);
+        //normally it just fits in at the bottom right of the lowest line. But if not enough space, add a bit to fill that out.
+        if (includeSourceLabel && remainingXPixelsLastLine < sourceLabelWidth.Width + 40)
         {
-            sourceLabelExtraYPixels = LineSize / 2 + 20;
+            //let's say the label need at least half a line.
+            labelExtraYPixels = (float)(LineYPixels * 0.5);
         }
 
-        var extraYPixels = LineSize * lines.Count + sourceLabelExtraYPixels;
+        //two things can expand the height: if the last line has descenders,
+        var totalExtraPixels = (int)(LineYPixels * lines.Count + Math.Max(labelExtraYPixels, lastLineOverhangYPixels)) + 2;
 
-        var im = new Bitmap(outputSize.Width, outputSize.Height + extraYPixels);
+        var annotatedImageTotalYPixels = outputSize.Height + totalExtraPixels;
+        var im = new Bitmap(outputSize.Width, annotatedImageTotalYPixels);
 
         var graphics = Graphics.FromImage(im);
         graphics.Clear(Color.Black);
@@ -190,26 +221,24 @@ public class Annotator
 
         inputImageToAnnotate.Dispose();
         var brush = new SolidBrush(Color.White);
-
-        var ii = 0;
+        var lastLineWrittenYPixels = outputSize.Height;
         foreach (var line in lines)
         {
-            var pos = (float)Math.Floor((double)(originalImageYHeightPixels + ii * LineSize));
-            graphics.DrawString(line, Font, brush, new PointF(0, pos));
-            ii += 1;
+            graphics.DrawString(line, Font, brush, new PointF(0, lastLineWrittenYPixels));
+            lastLineWrittenYPixels += LineYPixels;
         }
+
+        //try not to add too much extra space to the bottom.
         if (includeSourceLabel)
         {
             //add my watermarking etc here.  Slightly annoying since to be perfect I should maybe calculate the remaining Y space left for my small annotation?
-            //But that's annoying. Rather just add 10pix or so to the bottom by default and fill mine in there.
-            var labelPos = (float)Math.Floor((double)(originalImageYHeightPixels + (lines.Count - 1) * LineSize + 2 + sourceLabelExtraYPixels));
+            //okay just place it above the floor either way; if we bumped previously or not.
+            var labelYPos = (float)Math.Floor((double)(annotatedImageTotalYPixels - LineYPixels * 0.5));
 
-            var myFixedText = "dalle3-cmdline-csharp";
-            var w = FakeGraphics.MeasureString(myFixedText, LabelFont);
-            var p = new PointF(im.Width - w.Width - 4, labelPos);
+            var p = new PointF(im.Width - sourceLabelWidth.Width - 2, labelYPos);
             var verDarkGrey = Color.FromArgb(255, 36, 36, 36);
             var mybrush = new SolidBrush(verDarkGrey);
-            graphics.DrawString(myFixedText, LabelFont, mybrush, p);
+            graphics.DrawString(sourceLabelText, LabelFont, mybrush, p);
         }
 
         graphics.Save();
