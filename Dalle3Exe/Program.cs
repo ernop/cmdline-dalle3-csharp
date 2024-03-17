@@ -12,6 +12,7 @@ using System.Threading;
 using static Dalle3.Statics;
 
 using static Dalle3.Configuration;
+using Ideogram;
 
 namespace Dalle3
     {
@@ -32,6 +33,8 @@ namespace Dalle3
     {
         static async Task Main(string[] args)
         {
+            //IdeogramClient.A();
+
             bool locl = false;
             locl = true;
             //overriding for testing etc.

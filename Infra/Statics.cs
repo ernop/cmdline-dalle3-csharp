@@ -35,7 +35,7 @@ namespace Dalle3
         public static Graphics FakeGraphics { get; set; }
 
         public static Logger Logger { get; set; }
-        
+
         /// <summary>
         /// for formatting names in human readable logs and stuff
         /// </summary>
@@ -473,7 +473,15 @@ namespace Dalle3
         {
             if (take < input.Length)
             {
-                return input.Substring(0, Math.Min(input.Length, take)).Trim() + $"...(+{input.Length - take})";
+                double amt = input.Length - take;
+                var ss = amt.ToString();
+                if (amt > 1000)
+                {
+                    amt = Math.Round(amt / 1000.0);
+                    ss = $"{amt}k";
+                }
+
+                return input.Substring(0, Math.Min(input.Length, take)).Trim() + $".(+{ss})";
             }
             return input.Substring(0, Math.Min(input.Length, take)).Trim();
         }

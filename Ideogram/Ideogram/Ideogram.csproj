@@ -4,17 +4,16 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{56B17622-C305-4105-9801-C9A464167BCC}</ProjectGuid>
-    <OutputType>Exe</OutputType>
-    <RootNamespace>Dalle3Exe</RootNamespace>
-    <AssemblyName>Dalle3Exe</AssemblyName>
+    <ProjectGuid>{D91659E2-D748-403B-AA9A-FE0BA2575B49}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Ideogram</RootNamespace>
+    <AssemblyName>Ideogram</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Deterministic>true</Deterministic>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -24,7 +23,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
@@ -43,34 +41,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="OverridePrompts.cs" />
-    <Compile Include="Program.cs" />
+    <Compile Include="IdeogramClient.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Configuration.cs" />
+    <Compile Include="Statics.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Dalle3.csproj">
-      <Project>{bc7de14b-596f-4948-8f40-39d43cd80955}</Project>
-      <Name>Dalle3</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Ideogram\Ideogram\Ideogram.csproj">
-      <Project>{d91659e2-d748-403b-aa9a-fe0ba2575b49}</Project>
-      <Name>Ideogram</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\OpenAI-API-dotnet\OpenAI_API\OpenAI_API.csproj">
-      <Project>{1e94c769-a997-436c-95a0-cc43d2df9c10}</Project>
-      <Name>OpenAI_API</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces">
-      <Version>1.1.1</Version>
-    </PackageReference>
-    <PackageReference Include="System.Drawing.Common">
-      <Version>8.0.2</Version>
+    <PackageReference Include="Newtonsoft.Json">
+      <Version>13.0.3</Version>
     </PackageReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

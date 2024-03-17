@@ -26,14 +26,17 @@ namespace Dalle3
             _sw = new StreamWriter(Path, true);
         }
 
-        public void Log(string message)
+        public void Log(string message, bool outputFileOnly = false)
         {
             var now = DateTime.Now;
             lock (_lock)
             {
                 message = message.Trim();
                 _sw.WriteLine($"{now}\t{message}");
-                Console.WriteLine($"{now}\t{message}");
+                if (!outputFileOnly)
+                {
+                    Console.WriteLine($"{now}\t{message}");
+                }
             }
         }
     }

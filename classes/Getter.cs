@@ -81,6 +81,7 @@ namespace Dalle3
                 annotatedFp = aDirectory + "/annotated/" + aFilename;
 
                 var annotatedCompletePrompt = prompt;
+                Statics.Logger.Log($"FYI original prompt: \r\n{prompt}\r\nrevised to:\r\n{revisedPrompt}", outputFileOnly:true);
                 if (!string.IsNullOrEmpty(revisedPrompt) && revisedPrompt != prompt)
                 {
                     //Console.WriteLine($"{revisedPrompt}");

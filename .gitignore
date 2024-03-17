@@ -1,3 +1,6 @@
+*/.vs/
+*/bin/
+*/obj/
 backup.txt
 apikey.txt
 /.vs/Dalle3
@@ -17,3 +20,9 @@ apikey.txt
 /Dalle3Exe/logs
 /Dalle3Exe/organization.txt
 /dead-ui-stuff-from-csproj.txt
+/Ideogram/Ideogram/bin/Debug
+/Ideogram/Ideogram/obj
+/UI/.vs
+/UI/bin/Debug
+/UI/obj
+/Temp.txt
