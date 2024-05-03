@@ -17,7 +17,9 @@ namespace Dalle3
         //1. if you save them with another extension which would be ignored, then you get locking issues when trying to move them.
         //2. so instead i just save them out of view then move them back.
         //3. we also delay creating the unique filename.
-        //4. also save an annotated version?
+        //4. also save an annotated version. Yes. Also a  "revised" version which just contains the adjusted text that openAI insists you accept.
+        //5. TODO: also highlight the 'choice' areas (i.e. the areas of the input prompt which weren't fixed.)
+
         public static void DownloadCompleted(object sender, AsyncCompletedEventArgs e, OptionsModel optionsModel, string srcFp, string destFp,
             string prompt, string revisedPrompt, IEnumerable<InternalTextSection> ungroupedTextSections)
         {
@@ -38,7 +40,6 @@ namespace Dalle3
                 {
                     System.IO.File.Copy(srcFp, destFp, true);
                     System.IO.File.Delete(srcFp);
-                    //optionsModel.IncStr("DownloadedCount");
                 }
                 catch (System.IO.FileNotFoundException ex)
                 {
@@ -80,6 +81,9 @@ namespace Dalle3
 
                 annotatedFp = aDirectory + "/annotated/" + aFilename;
 
+                // re:5 I also have to figure out the background areas of the text which were highlighted.
+                //for them, how about I make teh background ligher and the text black?
+                var drawingInstructions = DetermineHowToDrawText(optionsModel);
                 var annotatedCompletePrompt = prompt;
                 Statics.Logger.Log($"FYI original prompt: \r\n{prompt}\r\nrevised to:\r\n{revisedPrompt}", outputFileOnly:true);
                 if (!string.IsNullOrEmpty(revisedPrompt) && revisedPrompt != prompt)
@@ -90,11 +94,14 @@ namespace Dalle3
                     {
                         revisedPrompt = revisedPrompt.Replace("\\r\\n", "\r\n");
                     }
-                    annotatedCompletePrompt += $"\r\n\r\nGPT revised it to: ==> \r\n\r\n\"{revisedPrompt}\"";
+                    var qual = optionsModel.Style == "natural" ? "natural" : "vivid";
+                    annotatedCompletePrompt += $"\r\n\r\nGPT revised it to: ==> \r\n\r\n\"{revisedPrompt}\"\r\nQuality: {qual}";
                 }
-                
-                ann.Annotate(destFp, annotatedFp, annotatedCompletePrompt, true);
+                //the one which has before + GPT changed to => and revised. NOTE: this doesn't actually do anything yet.
+                ann.Annotate(destFp, annotatedFp, annotatedCompletePrompt, true, drawingInstructions);
 
+
+                // Just the revised one.
                 var revisedAnnotationFp = destFp.Replace(".png", "_revised.png");
                 var rDirectory = Path.GetDirectoryName(revisedAnnotationFp);
                 var rFilename = Path.GetFileName(revisedAnnotationFp);
@@ -111,5 +118,40 @@ namespace Dalle3
                 //DoReport(optionsModel);
             }
         }
+
+        public static IEnumerable<SequentialTextPieceToDraw> DetermineHowToDrawText(OptionsModel op)
+        {
+            var rse = new List<SequentialTextPieceToDraw>();
+            foreach (var oo in op.PromptSections)
+            {
+
+                if (oo.IsFixed())
+                {
+                    var ss = new SequentialTextPieceToDraw();
+                    ss.text = oo.myContents();
+                    ss.isFixed= false;
+                    rse.Add(ss);
+                }
+                else
+                {
+                    var ss = new SequentialTextPieceToDraw();
+                    ss.text = oo.myContents();
+                    ss.isFixed = true;
+                    rse.Add(ss);
+                }
+            }
+            return rse;
+        }
+
+    }
+
+    public class SequentialTextPieceToDraw
+    {
+        public string text { get; set; }
+        
+        /// <summary>
+        /// i.e. is this a thing that never varies?
+        /// </summary>
+        public bool isFixed { get; set; }
     }
 }

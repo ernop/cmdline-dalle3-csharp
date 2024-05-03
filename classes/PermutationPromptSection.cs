@@ -5,6 +5,7 @@ namespace Dalle3
 {
     public class PermutationPromptSection : MetaPromptSection, IPromptSection
     {
+        public bool IsFixed() => false;
         public PermutationPromptSection(string s)
         {
             Setup(s, this);
@@ -17,8 +18,12 @@ namespace Dalle3
 
         public InternalTextSection Sample()
         {
-            return Contents[Statics.Random.Next(0, Contents.Count)];
+            var q = Contents[Statics.Random.Next(0, Contents.Count)];
+            _MyContents = q.L;
+            return q;
         }
+        public string myContents() => _MyContents;
+        private string _MyContents { get; set; }
 
         /// <summary>
         /// fake no worky
@@ -39,6 +44,6 @@ namespace Dalle3
         public override string ToString()
         {
             return $"PermutationPromptSection:with {Contents.Count} parts.";
-        }
+        }        
     }
 }

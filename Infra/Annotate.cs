@@ -8,6 +8,8 @@ using static Dalle3.Statics;
 using Image = System.Drawing.Image;
 using System.Linq;
 using System.Text;
+using Dalle3;
+using System.Drawing.Text;
 
 public class Annotator
 {
@@ -142,6 +144,10 @@ public class Annotator
     {
         //the input may have sections of \r, \n, \n\n, \r\n, etc. and we want to convert the entirety of any such contiguous section to a single one.
         //we do this so they don't get doubled up.
+        if (string.IsNullOrEmpty(input))
+        {
+            input = "";
+        }
         input = input.Replace("\r\n", "\n").Replace("\r", "\n");
 
         var parts = input.Split(new string[] { "\r", "\n", "|||" }, StringSplitOptions.None);
@@ -184,16 +190,41 @@ public class Annotator
     /// Annotate an image file at source with black text and a light text below (optional), expanding the height of the image and
     /// trying not to lose any pixels.
     /// </summary>
-    public async Task<string> Annotate(string srcFp, string destFp, string text, bool includeSourceLabel)
+    public async Task<string> Annotate(string srcFp, string destFp, string text, bool includeSourceLabel, IEnumerable<SequentialTextPieceToDraw> instructions = null)
     {
+
         var outputOffsetX = 0;
+        //this is the smart way to draw where we also overlay colored boxes and stuff.
 
         //the extra amount we increase the image size no matter what to make it so that descenders from the text don't overlap too much.
-        var sourceLabelText = "dalle3-cmdline-csharp";
-        var sourceLabelWidth = FakeGraphics.MeasureString(sourceLabelText, LabelFont);
-
         var inputImageToAnnotate = Image.FromFile(srcFp);
         var outputSize = inputImageToAnnotate.Size;
+
+        //lets characterize this as SOLEY figuring out the special areas, and drawing lighter boxes behind them.
+        //if (instructions != null)
+        //{
+        //    var prvateLines = GetTextInLines(text, outputSize.Width, out int AremainingXPixelsLastLine, out int BlastLineYHeight);
+        //    //okay so here we have the full text, plus various subsets of it.
+
+        //    //these will be tracked based on splitting up the input as we go.
+        //    var myStartLocationX = 0;
+        //    var myStartLocationY = 0;
+        //    foreach (var section in instructions)
+        //    {
+        //        //lets just characterize this as, for every nonfixed part of the input instructions, just figure out what line and prefix point (Y) it starts at.
+        //        //Then magically draw a lighter box behind that. The later code will never know.
+        //        var privateSection = GetTextInLines(section.text, outputSize.Width, out int aa, out int bb);
+        //        if (section.isFixed)
+        //        {
+
+        //        }
+        //    }
+        //}
+
+
+
+        var sourceLabelText = "dalle3-cmdline-csharp";
+        var sourceLabelWidth = FakeGraphics.MeasureString(sourceLabelText, LabelFont);
 
         var lines = GetTextInLines(text, outputSize.Width, out int remainingXPixelsLastLine, out int lastLineYHeight);
 
@@ -219,11 +250,46 @@ public class Annotator
         graphics.DrawImage(inputImageToAnnotate, new Point(outputOffsetX, 0));
 
         inputImageToAnnotate.Dispose();
-        var brush = new SolidBrush(Color.White);
+        var whiteBrush = new SolidBrush(Color.White);
+        var yellowBrush = new SolidBrush(Color.GreenYellow);
+
+        var usingBrush = whiteBrush;
+        //create a brush which has a certain background color, also:
+        //var brushY=new Brush(brush);
+
+        //var qq = new SolidBrush(
         var lastLineWrittenYPixels = outputSize.Height;
+        SequentialTextPieceToDraw currentInstruction = null;
+        var instructionIndex = 0;
+        if (instructions != null)
+        {
+            currentInstruction = instructions.First();
+            instructionIndex++;
+        }
+        var ii = 0;
         foreach (var line in lines)
         {
             graphics.DrawString(line, Font, brush, new PointF(0, lastLineWrittenYPixels));
+
+            //if (currentInstruction != null)
+            //{
+            //    if (currentInstruction.text.Length > line.Length)
+            //    {
+            //        if (currentInstruction.isFixed)
+            //        {
+            //            usingBrush = whiteBrush;
+            //        }
+            //        else
+            //        {
+            //            usingBrush = yellowBrush;
+            //        }
+            //        currentInstruction.text = currentInstruction.text.Replace(line, "").Trim();
+            //    }
+            //    else
+            //    {
+            //        //just the first part of this line is an instruction.
+            //    }
+            //}
             lastLineWrittenYPixels += LineYPixels;
         }
 
@@ -248,4 +314,5 @@ public class Annotator
         im.Save(destFp);
         return destFp;
     }
+
 }

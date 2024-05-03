@@ -15,8 +15,8 @@ namespace Dalle3
         public IEnumerable<IPromptSection> PromptSections { get; set; }
         public bool IncludeNormalImageOutput { get; set; }
         public bool IncludeAnnotatedImageOutput { get; set; }
-
         public int ImageNumber { get; set; }
+
         /// <summary>
         /// Random = sample randomly, this false means iterate in order.
         /// </summary>
@@ -25,7 +25,14 @@ namespace Dalle3
 
         //hd, standard
         public string Quality { get; set; } = "standard";
+        
+        //vivid is super intense, and not ideal for some use cases.
+        //otoh natural is super weird too.
+        public string Style { get; set; } = "natural";
 
+        /// <summary>
+        /// for categorization by filtering status, etc.
+        /// </summary>
         public Dictionary<string, int> Results { get; private set; } = new Dictionary<string, int>();
 
         public void IncStr(string key)

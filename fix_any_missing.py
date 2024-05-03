@@ -1,3 +1,7 @@
+#this is for cleaning up generated images and moving them to archive volders.
+#its necessary because sometimes you move one of the sub-files out, and its very annoying to have to re-move afte reevaluating the original or others.
+#so, when you're filtering, just remove any variant of the 3 generated files, then run this, and any other incomplete sets will be cleaned.
+
 import os, shutil, datetime
 from datetime import datetime, timezone
 

@@ -13,7 +13,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dalle3Exe", "Dalle3Exe\Dall
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ideogram", "Ideogram\Ideogram\Ideogram.csproj", "{D91659E2-D748-403B-AA9A-FE0BA2575B49}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dalle3UI", "Dalle3UI\Dalle3UI.csproj", "{F42BA5F7-EB17-44F6-82AF-64EC447171E1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dalle3UIWpf", "..\Dalle3UIWpf\Dalle3UIWpf.csproj", "{7733E972-F981-4ACD-99CF-9CF55502553C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -55,14 +55,14 @@ Global
 		{D91659E2-D748-403B-AA9A-FE0BA2575B49}.Release|Any CPU.Build.0 = Release|Any CPU
 		{D91659E2-D748-403B-AA9A-FE0BA2575B49}.Release|ARM64.ActiveCfg = Release|Any CPU
 		{D91659E2-D748-403B-AA9A-FE0BA2575B49}.Release|ARM64.Build.0 = Release|Any CPU
-		{F42BA5F7-EB17-44F6-82AF-64EC447171E1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F42BA5F7-EB17-44F6-82AF-64EC447171E1}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F42BA5F7-EB17-44F6-82AF-64EC447171E1}.Debug|ARM64.ActiveCfg = Debug|Any CPU
-		{F42BA5F7-EB17-44F6-82AF-64EC447171E1}.Debug|ARM64.Build.0 = Debug|Any CPU
-		{F42BA5F7-EB17-44F6-82AF-64EC447171E1}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F42BA5F7-EB17-44F6-82AF-64EC447171E1}.Release|Any CPU.Build.0 = Release|Any CPU
-		{F42BA5F7-EB17-44F6-82AF-64EC447171E1}.Release|ARM64.ActiveCfg = Release|Any CPU
-		{F42BA5F7-EB17-44F6-82AF-64EC447171E1}.Release|ARM64.Build.0 = Release|Any CPU
+		{7733E972-F981-4ACD-99CF-9CF55502553C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7733E972-F981-4ACD-99CF-9CF55502553C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7733E972-F981-4ACD-99CF-9CF55502553C}.Debug|ARM64.ActiveCfg = Debug|Any CPU
+		{7733E972-F981-4ACD-99CF-9CF55502553C}.Debug|ARM64.Build.0 = Debug|Any CPU
+		{7733E972-F981-4ACD-99CF-9CF55502553C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7733E972-F981-4ACD-99CF-9CF55502553C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7733E972-F981-4ACD-99CF-9CF55502553C}.Release|ARM64.ActiveCfg = Release|Any CPU
+		{7733E972-F981-4ACD-99CF-9CF55502553C}.Release|ARM64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

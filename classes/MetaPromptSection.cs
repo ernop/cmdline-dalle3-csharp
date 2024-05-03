@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Timers;
 
 using static Dalle3.Statics;
 
@@ -15,8 +16,7 @@ namespace Dalle3
         public IList<InternalTextSection> Contents { get; internal set; } = new List<InternalTextSection>();
         private int BadCount { get; set; } = 0;
         private int GoodCount { get; set; } = 0;
-        private Dictionary<string, int> GoodCounts { get; } = new Dictionary<string, int>();
-        private Dictionary<string, int> BadCounts { get; } = new Dictionary<string, int>();
+        private Dictionary<string,List<string>> Results { get; } = new Dictionary<string, List<string>>();
         public void Setup(string input, IPromptSection parent)
         {
             ///three options:
@@ -57,41 +57,30 @@ namespace Dalle3
             {
                 //var target = section.Parent;
                 //target.ReceiveChoiceResult(new InternalTextSection(section.L, section.L, false,section.Parent), result);
-                if (!GoodCounts.ContainsKey(actualPart))
+                if (!Results.ContainsKey(actualPart))
                 {
-                    GoodCounts[actualPart] = 0;
+                    Results[actualPart] = new List<string>();
                 }
-                if (!BadCounts.ContainsKey(actualPart))
-                {
-                    BadCounts[actualPart] = 0;
-                }
+
+                //TODO split these out into specific types of TextChoiceResultEnum
+                Results[actualPart].Add(result.ToString());
+
                 switch (result)
                 {
                     case TextChoiceResultEnum.RequestBlocked:
-                        BadCount++;
-                        BadCounts[actualPart]++;
-                        break;
+                    case TextChoiceResultEnum.ImageDescriptionsGeneratedBad:
                     case TextChoiceResultEnum.PromptRejected:
                         BadCount++;
-                        BadCounts[actualPart]++;
-                        break;
-                    case TextChoiceResultEnum.ImageDescriptionsGeneratedBad:
-                        BadCount++;
-                        BadCounts[actualPart]++;
                         break;
                     case TextChoiceResultEnum.Okay:
                         GoodCount++;
-                        GoodCounts[actualPart]++;
                         break;
                     case TextChoiceResultEnum.RateLimit:
-                        break;
                     case TextChoiceResultEnum.RateLimitRepeatedlyExceeded:
-                        break;
                     case TextChoiceResultEnum.UnknownError:
-                        break;
                     case TextChoiceResultEnum.TooLong:
-                        break;
                     case TextChoiceResultEnum.BillingLimit:
+                    case TextChoiceResultEnum.TaskCancelled:
                         break;
                     default:
                         throw new Exception("X");
@@ -105,7 +94,7 @@ namespace Dalle3
             var res = "";
             if (includeGlobal)
             {
-                res += $"\r\n\tGLOBAL {(100.0 * BadCount / (1.0 * BadCount + GoodCount)):0.0}b% (b:{BadCount} g: {GoodCount})";
+                res += $"\r\n\tGLOBAL: {(100.0 * BadCount / (1.0 * BadCount + GoodCount)):0.0}b% (b:{BadCount} g: {GoodCount})";
             }
 
             if (GoodCount > 0 || BadCount > 0)
@@ -113,19 +102,29 @@ namespace Dalle3
                 var reorder = new List<Tuple<string, InternalTextSection>>();
                 foreach (var content in Contents)
                 {
-                    int bc = 0;
-                    int gc = 0;
-                    var gotBad = BadCounts.TryGetValue(content.L, out bc);
-                    var gotGood = GoodCounts.TryGetValue(content.L, out gc);
-                    if (bc + gc > 0)
-                    {
-                        var perc = 100.0 * bc / (bc + gc);
-                        reorder.Add(new Tuple<string, InternalTextSection>($"{(int)perc:0.0}% {bc}b {gc}g", content));
-                    }
+                    //int bc = 0;
+                    //int gc = 0;
+                    var gg = Results.TryGetValue(content.L, out var bc);
+
+                    //                    var gotBad = bc.Where(el=>el.Equals
+                    //(TextChoiceResultEnum.RequestBlocked.ToString()) || el.Equals(TextChoiceResultEnum.ImageDescriptionsGeneratedBad.ToString()) || el.Equals(TextChoiceResultEnum.PromptRejected.ToString())).Count();
+
+                    //var gotBad = BadCounts.TryGetValue(content.L, out bc);
+                    //var gotGood = GoodCounts.TryGetValue(content.L, out gc);
+                    //if (bc + gc > 0)
+                    //{
+                    //    var perc = 100.0 * bc / (bc + gc);
+                    //    reorder.Add(new Tuple<string, InternalTextSection>($"{(int)perc:0.0}% {bc}b {gc}g", content));
+                    //}
+                    if (bc == null) { continue; }
+                    var qq = bc.GroupBy(el => el).Select(el => $"{el.Key}:{el.Count()}");
+                    var kk = string.Join(",", qq.OrderBy(el => el));
+                    reorder.Add(new Tuple<string, InternalTextSection>(kk, content));
+
                 }
                 foreach (var tuple in reorder.OrderByDescending(el => el.Item1))
                 {
-                    res += $"\r\n\t{tuple.Item1}\t{Slice(tuple.Item2.L, SliceAmount)} ";
+                    res += $"\r\n\t{tuple.Item1}\t\t\t\t\t{(tuple.Item2.L)} ";
                 }
             }
             return res;

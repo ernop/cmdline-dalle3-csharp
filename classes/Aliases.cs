@@ -27,20 +27,15 @@ namespace Dalle3
 
             var fantastical = new Alias("GPTFantastical", "enchanted forests, crystal caves, floating islands, underwater cities, molten landscapes, endless deserts, frozen tundras, neon jungles, ethereal planes, dream worlds, mirror dimensions, fractal realms, cosmic voids, quantum realms, parallel universes, interdimensional portals, eldritch abysses, elemental planes, astral planes, celestial spheres");
 
-            var protagonists = new Alias("GPTProtagonists", "lightning, lava, lasers, dinosaurs, volcanos, magma, explosions, constellations, " +
-                "waterfalls, melting ice walls, numinosity, cumulonimbus cloud banks, thunderstorms, ball lightning, will'o'the wisps, " +
-                "disappearing horsemen, native wild horses, " +
-                "cliffs, steep striped pyramids, a gigantic zero, a zeppelin, a jeep, " +
-                "far future realistic aliens, ocean vessels, kayaks, ice floes, icebergs, " +
-                "natural disasters, tornados, waterspouts, black dwarves, dwarf horses, " +
-                "venus fly traps, carnivorous plants, ice cream, cybernetics, nanotech, fusion power, " +
-                "holograms, antimatter, spaceships, chonky cats, yeti, loch ness monster, crypids, cryptocurrency, gold bars, barrels and crates, " +
-                "alien relics, the sea elves, paladins, d&d artifacts, +5 greatswords, ancient dragons,  orchids, greenhouses, galactic empires, ringworlds, dyson spheres, " +
-                "singularities, black holes, solar panels, teslas, drone haircut matchines, geodes, fulgurites, glow worms, sandworms, " +
-                "hexapods, ant farms, butterflies, cats, shark teeth, sharks, moon rocks, stalactites, missiles, cluster munitions, bullets, fireballs, electricity, " +
-                "DNA helices, princesses, knights,  " +
-                "the word 'ROBLOX', the alphabet, a mega-kanji, kaiju, centipedes, alien kaiju,lich, " +
-                "tsunamis,  beholder monsters, manatees, shattered spheres,  double rainbows, triple rainbows");
+            var protagonists = new Alias("GPTAwesomeness", "lightning, lava and magma rivers, naturally forming and artificial lasers, " +
+                "various types of unusual rare never-before-seen dinosaurs, triple rainbows, exceptionally gigantic and excessively magma-producing volcanoes, constellations, " +
+                "cliff waterfalls, gigantic ice walls, ball lightning, wild horses, extremely huge and super steep mega-cliffs, steep striped pyramids, " +
+                "zeppelins, mega-huge gigantic ocean-going ships and vessels, icebergs, dwarf horses, unbelievably cute and anachronistically oversized puppies" +
+                "carnivorous plants, chonky cats, crypids, tons and tons of scattered gold bars, barrels and crates, " +
+                "alien relics, specific d&d artifacts, exotic and unusual strange orchids, huge greenhouses, dyson spheres, " +
+                "large solar panel arrays, futuristic Tesla models, drones which are equipped with tools to give flying haircuts, gigantic geodes of various types, fulgurites, glow worms, unusual sand-worms, unusual alien hexapods, huge realistic ant farms, " +
+                "flocks of unique strange butterflies, megasharks and skeletons and relics of them, stalactites, a mega-kanji, alien strange unusual kaiju, magical liches, " +
+                "tsunamis and wave formations and waterspouts, D&D beholder monsters, shattered spheres");
 
             var forts = new Alias("GPTForts",
                 "zero-point energy, dark matter, plasma, monumental architecture, fort knox, the white house, the louvre, the golden temple of amritsar, the taj mahal, " +

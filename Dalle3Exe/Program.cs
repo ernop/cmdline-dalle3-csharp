@@ -129,16 +129,19 @@ namespace Dalle3
                 //the library magically returns null when the actual object is "standard" and you are using dalle3 for some reason.
                 //so fix it here for tracking.
                 req.Quality = optionsModel.Quality;
+                req.Style = optionsModel.Style;
 
-                req.Prompt = string.Join("", textSections.Select(el => el.L)).Replace(",,",", "); //HACK because we still use ,, as a way to tag fake ITS which are assembled from powerset sections.
+                // this is the "resolved" versions of the metasections.
+                var actuallyUsingSections = textSections.Select(el => el.L);
+
+                req.Prompt = string.Join("", actuallyUsingSections).Replace(",,",", "); //HACK because we still use ,, as a way to tag fake ITS which are assembled from powerset sections.
                 req.Size = optionsModel.Size;
                 var humanReadable = string.Join("_", textSections.Select(el => el.GetValueForHumanConsumption().Trim())).Replace(',', '_');
 
-                var l = req.Prompt.Length;
-                var displayedPromptLength = 100;
                 var mm = GenerateMeaningfulSummaryOfChosenPromptOptions(optionsModel, textSections);
 
-                Statics.Logger.Log($"Sending:\t\"{mm}");
+                //Statics.Logger.Log($"Sending:\t\"{mm}");
+                Statics.Logger.Log($"Sending 1 {mm}");
 
                 //during asyncification: actually, I was already doing things wrong, probably. This 
                 // method is actually where the exceptions were popping out of, but like 100% of the time, the path from here to the big try catch below
@@ -157,7 +160,8 @@ namespace Dalle3
                 //I should test that. anyway, don't rely on this block being guarded.
                 var task = Task.Run(async () =>
                 {
-                    var destFp = PromptToDestFpWithReservation(req, humanReadable, taskId);
+                    var destFp = PromptToDestFpWithReservation(req, actuallyUsingSections, taskId);
+
                     var tempFp = $"{Path.GetTempPath()}{taskId}.png";
 
                     try
@@ -195,13 +199,13 @@ namespace Dalle3
                     finally
                     {
                         throttler.Release();
-                        
                     }
                 });
                 tasks.Add(task);
+
                 var got = optionsModel.Results.TryGetValue("DownloadedCount", out var n);
 
-                if (got && n >= 300)
+                if (got && n >= 500)
                 {
                     Statics.Logger.Log($"break early due to generating {n}. =================.");
                     break;
@@ -210,6 +214,7 @@ namespace Dalle3
             }
 
             await Task.WhenAll(tasks);
+            await Task.Delay(4000);
             Statics.Logger.Log("\r\n===============FinalReport=============\r\n");
             DoReport(optionsModel);
             //Console.ReadLine();

@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
@@ -16,7 +17,6 @@ namespace Dalle3
         /// <summary>
         /// fix this later, for now, your consumers just have to call this.
         /// </summary>
-
         public static void Setup(string loggerPath, string fakeGraphicsPath)
         {
             if (Logger == null)
@@ -36,10 +36,7 @@ namespace Dalle3
 
         public static Logger Logger { get; set; }
 
-        /// <summary>
-        /// for formatting names in human readable logs and stuff
-        /// </summary>
-        public static int SliceAmount { get; } = 50;
+        
 
         //how to split up sections of complex prompts
         public static string MetaPromptDivider { get; } = ",,";
@@ -149,6 +146,16 @@ namespace Dalle3
                     optionsModel.Random = true;
                     continue;
                 }
+                if (s == "-natural")
+                {
+                    optionsModel.Style = "natural";
+                    continue;
+                }
+                if (s == "-vivid")
+                {
+                    optionsModel.Style = "vivid";
+                    continue;
+                }
                 if (s == "-hd")
                 {
                     optionsModel.Quality = "hd";
@@ -225,21 +232,48 @@ namespace Dalle3
             return optionsModel;
         }
 
-        public static string PromptToDestFpWithReservation(ImageGenerationRequest req, string humanReadable, int taskNumber)
+        private static string ReplaceUntilNoChange(string input, string oldPart, string newPart)
+        {
+            string previous;
+            do
+            {
+                previous = input;
+                input = input.Replace(oldPart, newPart);
+            } while (input != previous);
+
+            return input;
+        }
+
+        /// <summary>
+        /// modifying this so that it at least has the "meaningfully" chosen sections.
+        /// i.e. if a prompt is LONGTEXT_CHOICEAREA we will output enough of each section to uniquely identify it.</long>
+        /// </summary>
+        public static string PromptToDestFpWithReservation(ImageGenerationRequest req, IEnumerable<string> sections, int taskNumber)
         {
             var now = DateTime.Now;
-            string usePrompt = Regex.Replace(humanReadable, "[^a-zA-Z0-9]", "_");
-            while (usePrompt.Contains("__"))
+
+            var maxAllowableJoinedLength = 180;
+            sections = sections.Select(el => Regex.Replace(el, "[^a-zA-Z0-9]", "_").Trim('_'))
+                .Select(el => ReplaceUntilNoChange(el, "__","_"))
+                .Where(el2=>!string.IsNullOrWhiteSpace(el2));
+            var takeAmount = sections.Max(el => el.Length);
+
+            var humanReadable = "";
+            //okay how about this. as long as we need to cut, let's just gradually cut down the longest sections til we're under the threshold.
+            //i.e. initially just take the full length then cut it down little by little til its under the threshold.
+            while (true)
             {
-                usePrompt = usePrompt.Replace("__", "_");
+                var sumActuallyUsed = sections.Sum(el => el.Substring(0, Math.Min(takeAmount,el.Length)).Length);
+                if (sumActuallyUsed > maxAllowableJoinedLength)
+                {
+                    takeAmount--;
+                    continue;
+                }
+                humanReadable =String.Join("__", sections.Select(el=>el.Substring(0, Math.Min(takeAmount, el.Length))).ToArray());
+                break;
             }
 
-            if (usePrompt.Length > 180)
-            {
-                usePrompt = usePrompt.Substring(0, 60);
-            }
-
-            usePrompt = usePrompt + "_" + taskNumber.ToString();
+            humanReadable = humanReadable + "_" + taskNumber.ToString();
             string align;
 
             var dumbSize = req.Size.ToString();
@@ -258,12 +292,16 @@ namespace Dalle3
                     align = "def";
                     break;
             }
-            var outFn = $"{usePrompt.Trim().TrimEnd('_')}-{now.Year}{now.Month:00}{now.Day:00}-{req.Quality}-{align}.png";
+            var outFn = $"{humanReadable.Trim().TrimEnd('_')}-{now.Year}{now.Month:00}{now.Day:00}-{req.Quality}-{align}-{req.Style}.png";
 
             var tries = 0;
             while (true)
             {
                 var fp = $"d:/proj/dalle3/output/{outFn.Replace(".png", $"_{tries}.png")}";
+                if (tries > 0)
+                {
+                    fp = $"d:/proj/dalle3/output/{outFn.Replace(".png", $"_{tries}.png")}";
+                }
                 if (!System.IO.File.Exists(fp))
                 {
                     //touch a file there.
@@ -347,7 +385,7 @@ namespace Dalle3
         /// <param name="optionsModel"></param>
         public static void DoReport(OptionsModel optionsModel)
         {
-            var orderedKeys = new List<string>() { "RequestedCount", "Okay", "Error", };
+            var orderedKeys = new List<string>() { "RequestedCount", };
             foreach (var k in optionsModel.Results.Keys.OrderByDescending(el => (optionsModel.Results[el], el)))
             {
                 if (orderedKeys.IndexOf(k) == -1)
@@ -404,6 +442,7 @@ namespace Dalle3
         /// <summary>
         /// the first simple dumb text section should be used to track that round of global rejections.
         /// But there's no need to report later ones since they're fixed.
+        /// This is kind of becoming a duplicate of the filename generation logic.
         /// </summary>
         public static string GenerateMeaningfulSummaryOfChosenPromptOptions(OptionsModel optionsModel, IEnumerable<InternalTextSection> sections)
         {
@@ -419,19 +458,26 @@ namespace Dalle3
             {
                 UpdateWithFilterResult(optionsModel, textSections, TextChoiceResultEnum.PromptRejected);
                 System.IO.File.Delete(destFp);
-                await Task.Delay(2 * 1000);
+                await Task.Delay(1000);
             }
             else if (ex.Message.Contains("Your request was rejected as a result of our safety system. Image descriptions generated from your prompt may contain text that is not allowed by our safety system. If you believe this was done in error, your request may succeed if retried, or by adjusting your prompt."))
             {
                 UpdateWithFilterResult(optionsModel, textSections, TextChoiceResultEnum.ImageDescriptionsGeneratedBad);
                 System.IO.File.Delete(destFp);
-                await Task.Delay(2 * 1000);
+                await Task.Delay(1000);
             }
             else if (ex.Message.Contains("This request has been blocked by our content filters."))
             {
                 UpdateWithFilterResult(optionsModel, textSections, TextChoiceResultEnum.RequestBlocked);
                 System.IO.File.Delete(destFp);
-                await Task.Delay(2 * 1000);
+                await Task.Delay(1000);
+            }
+            else if (ex.Message.Contains("A task was cancelled"))
+            {
+                UpdateWithFilterResult(optionsModel, textSections, TextChoiceResultEnum.TaskCancelled);
+                optionsModel.IncStr("Cancelled");
+                Statics.Logger.Log($"{GetMessageLine(ex.Message)}");
+                System.IO.File.Delete(destFp);
             }
             else if (ex.Message.Contains("\"Rate limit exceeded for images per minute in organization"))
             {
@@ -459,6 +505,28 @@ namespace Dalle3
                 Statics.Logger.Log($"{GetMessageLine(ex.Message)}");
                 System.IO.File.Delete(destFp);
             }
+            else if (ex.Message.Contains("OpenAI had an internal server error"))
+            {
+                optionsModel.IncStr("OpenAI Internal server error");
+                Statics.Logger.Log($"OpenAI Internal server error");
+                Statics.Logger.Log($"{GetMessageLine(ex.Message)}");
+                System.IO.File.Delete(destFp);
+            }
+            else if (ex.Message.Contains("Unexpected character encountered while parsing value:"))
+            {
+                optionsModel.IncStr("Unexpected character encountered while parsing value:");
+                Statics.Logger.Log($"Unexpected character encountered while parsing value: {ex.Message}");
+                Statics.Logger.Log($"{GetMessageLine(ex.Message)}");
+                System.IO.File.Delete(destFp);
+            }
+            else if (ex.Message.Contains("//\"code\":503,\"message\":\"Service Unavailable.\""))
+            {
+                optionsModel.IncStr("503 Service Unavailable");
+                Statics.Logger.Log($"503 Service Unavailable");
+                Statics.Logger.Log($"{GetMessageLine(ex.Message)}");
+                System.IO.File.Delete(destFp);
+            }
+            
             else
             {
                 optionsModel.IncStr("Unknown.");
@@ -484,6 +552,27 @@ namespace Dalle3
                 return input.Substring(0, Math.Min(input.Length, take)).Trim() + $".(+{ss})";
             }
             return input.Substring(0, Math.Min(input.Length, take)).Trim();
+        }
+        public static List<string> LoadPrompts(string filePath)
+        {
+            List<string> prompts = new List<string>();
+            try
+            {
+                string[] lines = File.ReadAllLines(filePath);
+                foreach (var line in lines)
+                {
+                    if (!string.IsNullOrWhiteSpace(line.Trim()))
+                    {
+                        prompts.Add(line.Trim());
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("An error occurred while reading the file: " + ex.Message);
+            }
+
+            return prompts;
         }
     }
 }

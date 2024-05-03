@@ -3,6 +3,8 @@
 */obj/
 backup.txt
 apikey.txt
+prompts.txt
+outerprompts.txt
 /.vs/Dalle3
 /bin/Debug
 /obj

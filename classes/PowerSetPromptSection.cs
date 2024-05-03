@@ -14,6 +14,7 @@ namespace Dalle3
     /// </summary>
     public class PowerSetPromptSection : MetaPromptSection, IPromptSection
     {
+        public bool IsFixed() => false;
         public int MinToReturn { get; set; } = 0;
         public int MaxToReturn { get; set; } = int.MaxValue - 1;
 
@@ -38,9 +39,12 @@ namespace Dalle3
         {
             var fakeITS = Statics.PickRandomPowersetValue(Contents, MinToReturn, MaxToReturn);
             fakeITS.Parent = this;
+            _MyContents = fakeITS.ToString();
             return fakeITS;
         }
 
+        public string myContents() => _MyContents;
+        private string _MyContents { get; set; }
         /// <summary>
         /// okay, this doesn't actually work since now even when allegedly iterating, we actually just pick a random value.
         /// TODO fix it once I figure out how it should be. when there are multiple different types, it gets complicated on how to iterate right.

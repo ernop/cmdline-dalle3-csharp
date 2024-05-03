@@ -15,6 +15,10 @@ namespace Dalle3
         /// generally only used for things like {GPTLocations}, as a quick alias.
         /// </summary>
         public string S { get; set; }
+
+        /// <summary>
+        /// looking back now, what is the point of this? Make it simpler, seems to me to be the right answer.
+        /// </summary>
         public string L { get; set; }
         public bool IsSingle { get; set; }
         public IPromptSection Parent { get; set; }
@@ -23,18 +27,18 @@ namespace Dalle3
         {
             if (IsSingle)
             {
-                return Slice(S,SliceAmount);
+                return S;
             }
             else
             {
                 if (S == L)
                 {
                     //I guess this is the case where we don't expand.
-                    return Slice(S, SliceAmount);
+                    return S;
                 }
 
                 //this is where it's more like an abbreviation.
-                return $"{Slice(S, SliceAmount)}:{Slice(L, SliceAmount)}";
+                return $"{S}:{L}";
             }
         }
         public InternalTextSection(string s, string l, bool isSingle, IPromptSection parent)

@@ -7,6 +7,17 @@ namespace Dalle3
     public interface IPromptSection
     {
         /// <summary>
+        /// Whether or not the inner thingie is a fixed type, i.e. just a blob of text? (and hence not subject to any choice layer).
+        /// </summary>
+        /// <returns></returns>
+        bool IsFixed();
+
+        /// <summary>
+        /// okay this is definitely a bad reimplementation.
+        /// </summary>
+        string myContents();
+
+        /// <summary>
         /// Pick a random value from the set of possible values.
         /// </summary>
         InternalTextSection Sample();

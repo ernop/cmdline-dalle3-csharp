@@ -1,5 +1,8 @@
-﻿using System;
+﻿using OpenAI_API.Moderation;
+
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.Remoting.Contexts;
 
 using static Dalle3.Statics;
@@ -8,11 +11,11 @@ namespace Dalle3
 {
     public class TextPromptSection : IPromptSection
     {
+        public bool IsFixed() => true;
         private InternalTextSection S { get; set; }
         private int BadCount { get; set; } = 0;
         private int GoodCount { get; set; } = 0;
-        private Dictionary<string, int> GoodCounts { get; } = new Dictionary<string, int>();
-        private Dictionary<string, int> BadCounts { get; } = new Dictionary<string, int>();
+        private Dictionary<string, List<string>> Results { get; } = new Dictionary<string, List<string>>();
         public TextPromptSection(string s)
         {
             S = new InternalTextSection(s, s, true, this);
@@ -24,6 +27,8 @@ namespace Dalle3
         {
             return S;
         }
+        public string myContents() => S.L;
+        private string _MyContents { get; set; }
         public InternalTextSection Current()
         {
             return S;
@@ -31,41 +36,28 @@ namespace Dalle3
 
         public void ReceiveChoiceResult(InternalTextSection section, TextChoiceResultEnum result)
         {
-            if (!GoodCounts.ContainsKey(section.L))
+            if (!Results.ContainsKey(section.L))
             {
-                GoodCounts[section.L] = 0;
+                Results[section.L] = new List<string>();
             }
-            if (!BadCounts.ContainsKey(section.L))
-            {
-                BadCounts[section.L] = 0;
-            }
+            Results[section.L].Add(result.ToString());
+
             switch (result)
             {
                 case TextChoiceResultEnum.RequestBlocked:
-                    BadCount++;
-                    BadCounts[section.L]++;
-                    break;
                 case TextChoiceResultEnum.PromptRejected:
-                    BadCount++;
-                    BadCounts[section.L]++;
-                    break;
                 case TextChoiceResultEnum.ImageDescriptionsGeneratedBad:
                     BadCount++;
-                    BadCounts[section.L]++;
                     break;
                 case TextChoiceResultEnum.Okay:
                     GoodCount++;
-                    GoodCounts[section.L]++;
                     break;
                 case TextChoiceResultEnum.RateLimit:
-                    break;
                 case TextChoiceResultEnum.RateLimitRepeatedlyExceeded:
-                    break;
                 case TextChoiceResultEnum.UnknownError:
-                    break;
                 case TextChoiceResultEnum.TooLong:
-                    break;
                 case TextChoiceResultEnum.BillingLimit:
+                case TextChoiceResultEnum.TaskCancelled:
                     break;
                 default:
                     throw new Exception("X");
@@ -78,11 +70,11 @@ namespace Dalle3
             var res = "";
             if (includeGlobal)
             {
-                res += $"\r\n\t GLOBAL{(100 * BadCount / (1.0 * BadCount + GoodCount)):0.0}b%. (b: {BadCount}, g: {GoodCount})";
+                res += $"\r\n\t GLOBAL: {(100 * BadCount / (1.0 * BadCount + GoodCount)):0.0}b%. (b: {BadCount}, g: {GoodCount})";
             }
             if (GoodCount > 0 || BadCount > 0)
             {
-                res += $"\r\n\t{Slice(S.L, SliceAmount)}";
+                res += $"\r\n\t{S.L}";
             }
             return res;
         }

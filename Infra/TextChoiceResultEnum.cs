@@ -17,5 +17,6 @@
         UnknownError = 7,
         TooLong = 8,
         BillingLimit = 9,
+        TaskCancelled = 10,
     }
 }
